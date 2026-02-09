@@ -36,7 +36,7 @@ This is text.
 
 JXG.Options.text.useMathJax = true;
 
-var board = JXG.JSXGraph.initBoard('BOARDID', {boundingbox: [-5, 2, 5, -2], axis: true, keepAspectRatio: true});
+var board = JXG.JSXGraph.initBoard(BOARDID, {boundingbox: [-5, 2, 5, -2], axis: true, keepAspectRatio: true});
 var f = board.create('functiongraph',['x^2']);
 var p1 = board.create('point',[1, 1], {name:'\\(A^2\\)'});
 var p2 = board.create('point',[1, 2], {name:'\\(A\\)'});
