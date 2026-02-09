@@ -55,6 +55,25 @@ filters:
 ---
 ```
 
+## Attributes
+
+JSXGraph `<iframe>` Attributes
+
+| Attribute    | Description                                                                                  | Default |
+|--------------|----------------------------------------------------------------------------------------------|---------|
+| `iframe_id`  | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.                 | _nil_   |
+| `width`      | Sets the width in pixels (e.g., `500`) or percent (e.g., `50%`). For CSS units, use `style`. | `500`   |
+| `height`     | Sets the height in pixels (e.g., `500`) or percent (e.g., `50%`). For CSS units, use `style`. | `500`   |
+| `style`      | Apply custom CSS (e.g., `border: 5px solid red; border-radius: 10px;`).                      | none    |
+| `class`      | Adds a CSS class to the `<iframe>`.                                                          | none    |
+| `showSrc`    | _Not supported yet._                                                                         | false   |
+| `src_jxg`    | Path to `jsxgraphcore.js`.                                                                   |  |
+| `src_css`    | Path to `jsxgraph.css`.                                                                      |  |
+| `src_mjx`    | Path to MathJax file.                                                                        |  |
+
+## Example
+
+```html
 ## Example
 
 Here is the source code for a small example: [example.qmd](example.qmd).
