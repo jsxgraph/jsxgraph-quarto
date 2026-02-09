@@ -34,10 +34,12 @@ This is text.
 
 ```{.jsxgraph iframe_id="myIFrame" width="40%" height="200" style="border: 5px solid black; border-radius: 20px;"}
 
+JXG.Options.text.useMathJax = true;
+
 var board = JXG.JSXGraph.initBoard('BOARDID', {boundingbox: [-5, 2, 5, -2], axis: true, keepAspectRatio: true});
 var f = board.create('functiongraph',['x^2']);
-var p1 = board.create('point',[1, 1], {name:'\\(A^2\\)', usemathjax: true});
-var p2 = board.create('point',[1, 2], {name:'\\(A\\)', usemathjax: true});
-var p3 = board.create('point',[1, 3], {name:'\\(A_{max}\\)', usemathjax: true});
+var p1 = board.create('point',[1, 1], {name:'\\(A^2\\)'});
+var p2 = board.create('point',[1, 2], {name:'\\(A\\)'});
+var p3 = board.create('point',[1, 3], {name:'\\(A_{max}\\)'});
 
 ```
