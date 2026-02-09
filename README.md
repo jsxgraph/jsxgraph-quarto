@@ -4,6 +4,15 @@ Display [JSXGraph](https://jsxgraph.org) constructions with the scientific and t
 
 ## Installing
 
+### Install from github
+
+```
+cd myProject
+quarto add jsxgraph/jsxgraph-quarto
+```
+
+### Install manually
+
 - Create the subfolder `jsxgraph` in your project's folder `_extensions`
 - Copy files `_extension.yml`, `jsxgraph.lua` to the subdirectory `_extensions/jsxgraph`
 
