@@ -73,9 +73,6 @@ JSXGraph `<iframe>` Attributes
 
 ## Example
 
-```html
-## Example
-
 Here is the source code for a small example: [example.qmd](example.qmd).
 
 
