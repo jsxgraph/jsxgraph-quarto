@@ -51,15 +51,17 @@ function CodeBlock(content)
 
     -- Read options from document yml
     
-    attr = quarto.metadata.get('jsxgraph')
-    if type(attr) == "table" then
-      for k, v in pairs(attr) do
-        if k == 'style' then
-          options[k] = options[k] .. pandoc.utils.stringify(v)
-        else
-          options[k] = pandoc.utils.stringify(v)
+    if quarto.metadata ~= nil then
+      attr = quarto.metadata.get('jsxgraph')
+      if type(attr) == "table" then
+        for k, v in pairs(attr) do
+          if k == 'style' then
+            options[k] = options[k] .. pandoc.utils.stringify(v)
+          else
+            options[k] = pandoc.utils.stringify(v)
+          end
+          -- quarto.log.output('>>>', k, options[k])
         end
-        -- quarto.log.output('>>>', k, options[k])
       end
     end
 
