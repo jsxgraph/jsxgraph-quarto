@@ -71,7 +71,16 @@ JSXGraph `<iframe>` Attributes
 | `src_css`    | Path to `jsxgraph.css`.                                                                      |  |
 | `src_mjx`    | Path to MathJax file.                                                                        |  |
 
-## Example
+### Example
+
+~~~markdown
+```{.jsxgraph width="300" style="border:none"}
+var board = JXG.JSXGraph.initBoard(BOARDID, {boundingbox: [-5, 2, 5, -2], axis: true, keepAspectRatio: true});
+var f = board.create('functiongraph',['x^2']);
+```
+~~~
+
+## Demo
 
 Here is the source code for a small example: [example.qmd](example.qmd).
 

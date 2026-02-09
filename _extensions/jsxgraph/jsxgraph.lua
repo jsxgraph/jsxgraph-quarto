@@ -44,50 +44,14 @@ function CodeBlock(content)
     -- JSXGraph JavaScript
     local jsxgraph = content.text
 
-    -- separate first line and read width and height
-
-    --[[
-    local function tokenizer(input, delimiter)
-        local tokens = {}
-        local escaped_delim = delimiter:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1")
-        local pattern = "([^" .. escaped_delim .. "]*)"
-        for token in string.gmatch(input, pattern .. escaped_delim .. "?") do
-            if token ~= "" then
-                table.insert(tokens, token)
-            end
-        end
-        return tokens
-    end
-    --]]
-
     -- Parse options
-
-    --[[
-    local width = ''
-    local height = ''
-
-    local first = tokenizer(jsxgraph,  '\n')[1]
-
-    if first:match('initBoard') then
-      width = '500px'
-      height = '500px'
-    else
-      local size = tokenizer(first, ' ')
-      width = size[1]
-      height = size[2]
-      jsxgraph = jsxgraph:gsub("^[^\n]*\n", "")
-    end
-    --]]
 
     local attr
     -- Global _quarto.yml should be here
 
-    -- Document yml
-
+    -- Read options from document yml
+    
     attr = quarto.metadata.get('jsxgraph')
-    -- quarto.log.output('|>', quarto.metadata.get('jsxgraph'))
-
-    -- Options in page yml
     if type(attr) == "table" then
       for k, v in pairs(attr) do
         if k == 'style' then
@@ -99,7 +63,7 @@ function CodeBlock(content)
       end
     end
 
-    -- Options in code block
+    -- Read options in code block
 
     attr = content.attr.attributes
     if type(attr) == "userdata" then
@@ -121,11 +85,6 @@ function CodeBlock(content)
 
     jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("' .. id .. '",')
 
-    -- iframe file - AW: no, send base64 string to src attribute
-    --[[
-    local file = io.open(id .. ".html", "w")
-    --]]
-
     local save =  '<!DOCTYPE html>\n'
     save = save .. '<html lang="en">\n'
     save = save .. '  <head>\n'
@@ -146,15 +105,7 @@ function CodeBlock(content)
     save = save .. '  </body>\n'
     save = save .. '</html>\n'
 
-  --[[
-    file:write(save)
-    file:close()
-
-    -- iframe
-    local iframe = '<iframe src="' .. id .. '.html" width="' .. width .. '" height="' .. height .. '" style=""></iframe>\n'
-  --]]
-
-    -- iframe
+    -- Create iframe
     local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(save);
     local iframe = '<iframe '
           if options['iframe_id'] ~= nil then
@@ -168,7 +119,7 @@ function CodeBlock(content)
           iframe = iframe .. ' style="' .. options['style'] .. '"'
           iframe = iframe .. '></iframe>\n'
 
-    -- output html
+    -- Output html
     return pandoc.RawBlock("html", iframe)
 
   else
