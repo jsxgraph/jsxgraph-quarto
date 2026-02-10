@@ -37,7 +37,7 @@ local function render_graph(globalOptions)
             math.randomseed(os.time() + os.clock() * 1000000)
             local function uuid()
                 local template = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-                return string.gsub(template, '[xy]', function(c)
+                return 'JXG' .. string.gsub(template, '[xy]', function(c)
                     local r = math.random(0, 15)
                     if c == 'x' then
                         return string.format('%x', r)
