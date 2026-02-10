@@ -152,8 +152,14 @@ local function render_graph(globalOptions)
             return content
         end
     end
+
+    local DecoratedCodeBlock = function(node)
+        return CodeBlock(node.code_block)
+    end
+
     return {
-        CodeBlock = CodeBlock
+        CodeBlock = CodeBlock,
+        DecoratedCodeBlock = DecoratedCodeBlock
     }
 
 end
