@@ -29,20 +29,6 @@ local function render_graph(globalOptions)
     local CodeBlock = function(content)
         if content.classes:includes("jsxgraph") then
 
-            ---Configuration options for the extension
-            ---@type table<string, any>
-
-            -- local options = {
-            --     iframe_id = nil,
-            --     width = '500',
-            --     height = '500',
-            --     style = 'border: 1px solid black; border-radius: 10px;',
-            --     class = '',
-            --     showSrc = false,
-            --     src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
-            --     src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
-            --     src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js'
-            -- }
             -- Initialise options table
             local options = copyTable(globalOptions)
 
@@ -154,6 +140,7 @@ local function render_graph(globalOptions)
     end
 
     local DecoratedCodeBlock = function(node)
+        -- quarto.log.output('>>> execute DecoratedCodeBlock')
         return CodeBlock(node.code_block)
     end
 
@@ -166,6 +153,8 @@ end
 
 function Pandoc(doc)
 
+    ---Configuration options for the extension
+    ---@type table<string, any>
     local options = {
         iframe_id = nil,
         width = '500',
