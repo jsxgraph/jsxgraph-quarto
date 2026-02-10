@@ -24,6 +24,11 @@ function copyTable(obj, seen)
     return setmetatable(res, getmetatable(obj))
 end
 
+-- Helper for non empty string
+function is_nonempty_string(x)
+    return x ~= nil and type(x) == "string"
+end
+
 local function render_graph(globalOptions)
 
     local CodeBlock = function(content)
@@ -132,7 +137,20 @@ local function render_graph(globalOptions)
             iframe = iframe .. '></iframe>\n'
 
             -- Output html
-            return pandoc.RawBlock("html", iframe)
+            -- return pandoc.RawBlock("html", iframe)
+
+            if is_nonempty_string(options.show_src) then
+                options.show_src = options.show_src == "true"
+            end
+
+            local iframe_code = pandoc.RawBlock("html", iframe)
+            if options.show_src == true then
+                -- local codeBlock = pandoc.CodeBlock(content.text, content.attr)
+                local codeBlock = pandoc.CodeBlock(content.text, {class='javascript'})
+                return pandoc.Div({iframe_code, codeBlock})
+            else
+                return iframe_code
+            end
 
         else
             return content
@@ -161,7 +179,7 @@ function Pandoc(doc)
         height = '500',
         style = 'border: 1px solid black; border-radius: 10px;',
         class = '',
-        showSrc = false,
+        show_src = false,
         src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js'

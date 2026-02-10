@@ -12,7 +12,7 @@ jsxgraph:
 
 ## Use default size 500px x 500px
 
-```jsxgraph
+```{.jsxgraph show_src=true}
 var board = JXG.JSXGraph.initBoard(BOARDID, {boundingbox: [-5, 2, 5, -2]});
 var p = board.create('point',[-2,1]);
 var q = board.create('point',[3,0]);
