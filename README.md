@@ -66,7 +66,7 @@ JSXGraph `<iframe>` Attributes
 | `height`     | Sets the height in pixels (e.g., `500`) or percent (e.g., `50%`). For CSS units, use `style`. | `500`   |
 | `style`      | Apply custom CSS (e.g., `border: 5px solid red; border-radius: 10px;`).                      | none    |
 | `class`      | Adds a CSS class to the `<iframe>`.                                                          | none    |
-| `show_src`   | Display JSXGraph source code                                                                 | false   |
+| `echo`       | Display JSXGraph source code                                                                 | false   |
 | `src_jxg`    | Path to `jsxgraphcore.js`.                                                                   |  |
 | `src_css`    | Path to `jsxgraph.css`.                                                                      |  |
 | `src_mjx`    | Path to MathJax file.                                                                        |  |

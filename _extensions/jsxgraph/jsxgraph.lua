@@ -139,12 +139,12 @@ local function render_graph(globalOptions)
             -- Output html
             -- return pandoc.RawBlock("html", iframe)
 
-            if is_nonempty_string(options.show_src) then
-                options.show_src = options.show_src == "true"
+            if is_nonempty_string(options.echo) then
+                options.echo = options.echo == "true"
             end
 
             local iframe_code = pandoc.RawBlock("html", iframe)
-            if options.show_src == true then
+            if options.echo == true then
                 -- local codeBlock = pandoc.CodeBlock(content.text, content.attr)
                 local codeBlock = pandoc.CodeBlock(content.text, {class='javascript'})
                 return pandoc.Div({iframe_code, codeBlock})
@@ -179,7 +179,7 @@ function Pandoc(doc)
         height = '500',
         style = 'border: 1px solid black; border-radius: 10px;',
         class = '',
-        show_src = false,
+        echo = false,
         src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js'
