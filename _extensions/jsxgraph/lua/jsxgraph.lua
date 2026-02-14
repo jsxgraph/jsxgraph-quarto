@@ -88,7 +88,7 @@ local function render_jsxgraph(globalOptions)
 
             math.randomseed(os.time() + os.clock() * 1000000)
             local function uuid()
-                local template = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+                local template = 'xxxxxxxx_xxxx_xxxx_xxxx_xxxxxxxxxxxx'
                 return 'JXG' .. string.gsub(template, '[xy]', function(c)
                     local r = math.random(0, 15)
                     if c == 'x' then
