@@ -205,7 +205,7 @@ local function render_jsxgraph(globalOptions)
                 jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("' .. id .. '",')
 
                 if options['render'] == 'div' then
-                    html_content = html_content .. '<div id="' .. id .. '" width="' .. options['width'] .. '" height="' .. options['height'] .. '" style="position: relative; overflow: hidden; background-color: #fff; border-style: solid; border-width: 1px; border-color: #356aa0; border-radius: 10px; -webkit-border-radius: 10px; margin: 0; -ms-touch-action: none;"></div>\n'
+                    html_content = html_content .. '<div id="' .. id .. '" style="width; ' .. options['width'] .. 'px; height: ' .. options['height'] .. 'px; position: relative; overflow: hidden; background-color: #fff; border-style: solid; border-width: 1px; border-color: #356aa0; border-radius: 10px; -webkit-border-radius: 10px; margin: 0; -ms-touch-action: none;"></div>\n'
                     html_content = html_content .. '<script type="module">\n'
                     html_content = html_content .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js";\n'
                     html_content = html_content .. jsxgraph .. '\n'
