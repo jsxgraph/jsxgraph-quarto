@@ -249,7 +249,7 @@ local function render_jsxgraph(globalOptions)
                     html_content = html_content .. ' name="iframe' .. id .. '"'
                     html_content = html_content .. '></iframe>\n'
                     if options['reload'] == false then
-                        html_content = html_content .. '<button  id="button' .. id .. '">&#x21BA;</button>\n'
+                        html_content = html_content .. '<button  id="button' .. id .. '" style="background-color:transparent;color:#b0b0b0;border:2px solid #d3d3d3;border-radius:25px;padding:10px 20px;font-size:16px;cursor:pointer;transition:background-color 0.3s,color 0.3s;">&#x21BA;</button>\n'
                         html_content = html_content .. '<script>\n'
                         html_content = html_content .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
                         html_content = html_content .. '    const iframe' .. id .. ' = document.getElementsByName("iframe' .. id .. '")[0]\n'
