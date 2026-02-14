@@ -204,7 +204,19 @@ local function render_jsxgraph(globalOptions)
 
                 jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("' .. id .. '",')
 
-                if options['render'] == 'iframe' then
+                if options['render'] == 'div' then
+                    html_content = html_content .. '<script type="module">\n'
+                    html_content = html_content .. '    const link = document.createElement("link");\n'
+                    html_content = html_content .. '    link.rel = "stylesheet";\n'
+                    html_content = html_content .. '    link.href = "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css";\n'
+                    html_content = html_content .. '    document.head.appendChild(link);\n'
+                    html_content = html_content .. '</script>\n'
+                    html_content = html_content .. '<div id="' .. id .. '" class="jxgbox" style="width: ' ..  options['width'] .. '; height: ' ..  options['height'] .. '; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
+                    html_content = html_content .. '<script type="module">\n'
+                    html_content = html_content .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js";\n'
+                    html_content = html_content .. jsxgraph .. '\n'
+                    html_content = html_content .. '</script>\n'
+                else
                     local save = '<!DOCTYPE html>\n'
                     save = save .. '<html lang="en">\n'
                     save = save .. '  <head>\n'
@@ -241,18 +253,6 @@ local function render_jsxgraph(globalOptions)
                     html_content = html_content .. ' class="' .. options['class'] .. '"'
                     html_content = html_content .. ' style="' .. options['style'] .. '"'
                     html_content = html_content .. '></iframe>\n'
-                else
-                    html_content = html_content .. '<script type="module">\n'
-                    html_content = html_content .. '    const link = document.createElement("link");\n'
-                    html_content = html_content .. '    link.rel = "stylesheet";\n'
-                    html_content = html_content .. '    link.href = "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css";\n'
-                    html_content = html_content .. '    document.head.appendChild(link);\n'
-                    html_content = html_content .. '</script>\n'
-                    html_content = html_content .. '<div id="' .. id .. '" class="jxgbox" style="width: ' ..  options['width'] .. '; height: ' ..  options['height'] .. '; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
-                    html_content = html_content .. '<script type="module">\n'
-                    html_content = html_content .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js";\n'
-                    html_content = html_content .. jsxgraph .. '\n'
-                    html_content = html_content .. '</script>\n'
                 end
 
                 if is_nonempty_string(options.echo) then
