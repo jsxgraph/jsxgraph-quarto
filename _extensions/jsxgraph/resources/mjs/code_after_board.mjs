@@ -10,7 +10,7 @@ if (svgElement) {
     const borderWidth = 2;
     const borderRadius = 12;
     const padding = 0;
-    const backgroundColor = '#f0f0f0';
+    const backgroundColor = 'none';
 
     const newWidth = originalWidth + (2 * padding) + (2 * borderWidth);
     const newHeight = originalHeight + (2 * padding) + (2 * borderWidth);

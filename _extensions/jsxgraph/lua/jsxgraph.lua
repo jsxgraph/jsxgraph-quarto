@@ -196,70 +196,74 @@ local function render_jsxgraph(globalOptions)
             else
                 -- replace BOARDID
 
-                local html_content = ''
-
                 jsxgraph = jsxgraph:gsub("initBoard%(%s*BOARDID%s*,", 'initBoard("' .. id .. '",')
 
                 -- replace id
 
                 jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("' .. id .. '",')
 
-                if options['render'] == 'div' then
-                    html_content = html_content .. '<div id="' .. id .. '" style="width: ' .. options['width'] .. 'px; height: ' .. options['height'] .. 'px; position: relative; overflow: hidden; background-color: #fff; border-style: solid; border-width: 1px; border-color: #356aa0; border-radius: 10px; -webkit-border-radius: 10px; margin: 0; -ms-touch-action: none;"></div>\n'
-                    html_content = html_content .. '<script type="module">\n'
-                    html_content = html_content .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.mjs";\n'
-                    html_content = html_content .. jsxgraph .. '\n'
-                    html_content = html_content .. '</script>\n'
-                else
-                    local save = '<!DOCTYPE html>\n'
-                    save = save .. '<html lang="en">\n'
-                    save = save .. '  <head>\n'
-                    save = save .. '    <meta charset="UTF-8">\n'
-                    save = save .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
-                    save = save .. '    <script src="' .. options['src_jxg'] .. '"></script>\n'
-                    save = save .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
-                    save = save .. '    <style>\n'
-                    save = save .. '      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }\n'
-                    save = save .. '      .jxgbox { border: none; }\n'
-                    save = save .. '    </style>\n'
-                    save = save .. '  </head>\n'
-                    save = save .. '  <body>\n'
-                    save = save .. '    <div id="' .. id ..
-                               '" class="jxgbox" style="width: 100%; height: 100%; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
-                    save = save .. '    <script>\n'
-                    save = save .. jsxgraph .. '\n'
-                    save = save .. '    </script>\n'
-                    save = save .. '  </body>\n'
-                    save = save .. '</html>\n'
+                -- HTML code for <div> and <iframe>
 
-                    -- quarto.log.output(save)
+                local html = ''
+
+                if options['render'] == 'div' then
+                    html = html .. '<div id="' .. id .. '" style="width: ' .. options['width'] .. 'px; height: ' .. options['height'] .. 'px; position: relative; overflow: hidden; background-color: #fff; border-style: solid; border-width: 1px; border-color: #356aa0; border-radius: 10px; -webkit-border-radius: 10px; margin: 0; -ms-touch-action: none;"></div>\n'
+                    html = html .. '<script type="module">\n'
+                    html = html .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.mjs";\n'
+                    html = html .. jsxgraph .. '\n'
+                    html = html .. '</script>\n'
+                else
+                    local iframe = '<!DOCTYPE html>\n'
+                    iframe = iframe .. '<html lang="en">\n'
+                    iframe = iframe .. '  <head>\n'
+                    iframe = iframe .. '    <meta charset="UTF-8">\n'
+                    iframe = iframe .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
+                    iframe = iframe .. '    <script src="' .. options['src_jxg'] .. '"></script>\n'
+                    iframe = iframe .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
+                    iframe = iframe .. '    <style>\n'
+                    iframe = iframe .. '      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }\n'
+                    iframe = iframe .. '      .jxgbox { border: none; }\n'
+                    iframe = iframe .. '    </style>\n'
+                    iframe = iframe .. '  </head>\n'
+                    iframe = iframe .. '  <body>\n'
+                    iframe = iframe .. '    <div id="' .. id ..
+                               '" class="jxgbox" style="width: 100%; height: 100%; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
+                    iframe = iframe .. '    <script>\n'
+                    iframe = iframe .. jsxgraph .. '\n'
+                    iframe = iframe .. '    </script>\n'
+                    iframe = iframe .. '  </body>\n'
+                    iframe = iframe .. '</html>\n'
+
+                    -- Content base64
+
+                    local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(iframe);
 
                     -- Create iframe
-                    local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(save);
-                    html_content = '<iframe '
+
+                    html = '<iframe '
                     if options['iframe_id'] ~= nil then
-                        html_content = html_content .. ' id="' .. options['iframe_id'] .. '" '
+                        html = html .. ' id="' .. options['iframe_id'] .. '" '
                     end
-                    html_content = html_content .. ' src="' .. jsx_b64 .. '" '
-                    html_content = html_content .. ' sandbox="allow-scripts  allow-same-origin" '
-                    html_content = html_content .. ' width="' .. options['width'] .. '"'
-                    html_content = html_content .. ' height="' .. options['height'] .. '"'
-                    html_content = html_content .. ' class="' .. options['class'] .. '"'
-                    html_content = html_content .. ' style="' .. options['style'] .. '"'
-                    html_content = html_content .. ' name="iframe' .. id .. '"'
-                    html_content = html_content .. '></iframe>\n'
+                    html = html .. ' src="' .. jsx_b64 .. '" '
+                    html = html .. ' sandbox="allow-scripts  allow-same-origin" '
+                    html = html .. ' width="' .. options['width'] .. '"'
+                    html = html .. ' height="' .. options['height'] .. '"'
+                    html = html .. ' class="' .. options['class'] .. '"'
+                    html = html .. ' style="' .. options['style'] .. '"'
+                    html = html .. ' name="iframe' .. id .. '"'
+                    html = html .. '></iframe>\n'
 
                     if is_nonempty_string(options.reload) then
                         options.reload = options.reload == "true"
                     end
 
                     if options.reload then
-                        html_content = html_content .. '<button  id="button' .. id .. '" style="background-color:transparent;color:#000000;border:none;font-size:16px;cursor:pointer;">&#x21BA;</button>\n'
-                        html_content = html_content .. '<script>\n'
-                        html_content = html_content .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
-                        html_content = html_content .. '    const iframe' .. id .. ' = document.getElementsByName("iframe' .. id .. '")[0]\n'
-                        html_content = html_content .. '    btn' .. id .. '.addEventListener("click", () => { iframe' .. id .. '.src = iframe' .. id .. '.src; });\n'--contentWindow.location.reload();
-                        html_content = html_content .. '</script>\n'
+                        html = html .. '<button  id="button' .. id .. '" style="background-color:transparent;color:#000000;border:none;font-size:16px;cursor:pointer;">&#x21BA;</button>\n'
+                        html = html .. '<script>\n'
+                        html = html .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
+                        html = html .. '    const iframe' .. id .. ' = document.getElementsByName("iframe' .. id .. '")[0]\n'
+                        html = html .. '    btn' .. id .. '.addEventListener("click", () => { iframe' .. id .. '.src = iframe' .. id .. '.src; });\n'--contentWindow.location.reload();
+                        html = html .. '</script>\n'
                     end
                 end
 
@@ -267,7 +271,7 @@ local function render_jsxgraph(globalOptions)
                     options.echo = options.echo == "true"
                 end
 
-                local html_code = pandoc.RawBlock("html", html_content)
+                local html_code = pandoc.RawBlock("html", html)
 
                 if options.echo then
                     -- local codeBlock = pandoc.CodeBlock(content.text, content.attr)
