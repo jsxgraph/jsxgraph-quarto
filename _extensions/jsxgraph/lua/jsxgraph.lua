@@ -299,6 +299,7 @@ function Pandoc(doc)
         style = 'border: 1px solid black; border-radius: 10px;',
         class = '',
         echo = true,
+        reload = false,
         src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js'
