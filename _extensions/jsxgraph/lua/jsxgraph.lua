@@ -248,7 +248,7 @@ local function render_jsxgraph(globalOptions)
                     html_content = html_content .. ' style="' .. options['style'] .. '"'
                     html_content = html_content .. ' name="iframe' .. id .. '"'
                     html_content = html_content .. '></iframe>\n'
-                    if options.reload then
+                    if options['reload'] == 'true' then
                         html_content = html_content .. '<button  id="button' .. id .. '" style="background-color:transparent;color:#000000;border:none;font-size:16px;cursor:pointer;">&#x21BA;</button>\n'
                         html_content = html_content .. '<script>\n'
                         html_content = html_content .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
@@ -258,13 +258,13 @@ local function render_jsxgraph(globalOptions)
                     end
                 end
 
-                if is_nonempty_string(options.echo) then
-                    options.echo = options.echo == "true"
+                if is_nonempty_string(options['echo']) then
+                    options['echo'] = "true"
                 end
 
                 local html_code = pandoc.RawBlock("html", html_content)
 
-                if options.echo == true then
+                if options['echo'] == 'true' then
                     -- local codeBlock = pandoc.CodeBlock(content.text, content.attr)
                     local codeBlock = pandoc.CodeBlock(content.text, {class='javascript'})
                     return pandoc.Div({html_code, codeBlock})
@@ -298,7 +298,7 @@ function Pandoc(doc)
         render = 'iframe',
         style = 'border: 1px solid black; border-radius: 10px;',
         class = '',
-        echo = true,
+        echo = false,
         reload = false,
         src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
