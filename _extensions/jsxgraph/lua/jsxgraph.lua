@@ -196,61 +196,75 @@ local function render_jsxgraph(globalOptions)
             else
                 -- replace BOARDID
 
+                local html_content = ''
+
                 jsxgraph = jsxgraph:gsub("initBoard%(%s*BOARDID%s*,", 'initBoard("' .. id .. '",')
 
                 -- replace id
 
                 jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("' .. id .. '",')
 
-                local save = '<!DOCTYPE html>\n'
-                save = save .. '<html lang="en">\n'
-                save = save .. '  <head>\n'
-                save = save .. '    <meta charset="UTF-8">\n'
-                save = save .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
-                save = save .. '    <script src="' .. options['src_jxg'] .. '"></script>\n'
-                save = save .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
-                save = save .. '    <style>\n'
-                save = save .. '      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }\n'
-                save = save .. '      .jxgbox { border: none; }\n'
-                save = save .. '    </style>\n'
-                save = save .. '  </head>\n'
-                save = save .. '  <body>\n'
-                save = save .. '    <div id="' .. id ..
-                           '" class="jxgbox" style="width: 100%; height: 100%; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
-                save = save .. '    <script>\n'
-                save = save .. jsxgraph .. '\n'
-                save = save .. '    </script>\n'
-                save = save .. '  </body>\n'
-                save = save .. '</html>\n'
+                if options['render'] == 'iframe' then
+                    local save = '<!DOCTYPE html>\n'
+                    save = save .. '<html lang="en">\n'
+                    save = save .. '  <head>\n'
+                    save = save .. '    <meta charset="UTF-8">\n'
+                    save = save .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
+                    save = save .. '    <script src="' .. options['src_jxg'] .. '"></script>\n'
+                    save = save .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
+                    save = save .. '    <style>\n'
+                    save = save .. '      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }\n'
+                    save = save .. '      .jxgbox { border: none; }\n'
+                    save = save .. '    </style>\n'
+                    save = save .. '  </head>\n'
+                    save = save .. '  <body>\n'
+                    save = save .. '    <div id="' .. id ..
+                               '" class="jxgbox" style="width: 100%; height: 100%; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
+                    save = save .. '    <script>\n'
+                    save = save .. jsxgraph .. '\n'
+                    save = save .. '    </script>\n'
+                    save = save .. '  </body>\n'
+                    save = save .. '</html>\n'
 
-                -- quarto.log.output(save)
+                    -- quarto.log.output(save)
 
-                -- Create iframe
-                local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(save);
-                local iframe = '<iframe '
-                if options['iframe_id'] ~= nil then
-                    iframe = iframe .. ' id="' .. options['iframe_id'] .. '" '
+                    -- Create iframe
+                    local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(save);
+                    html_content = '<iframe '
+                    if options['iframe_id'] ~= nil then
+                        html_content = html_content .. ' id="' .. options['iframe_id'] .. '" '
+                    end
+                    html_content = html_content .. ' src="' .. jsx_b64 .. '" '
+                    html_content = html_content .. ' sandbox="allow-scripts" '
+                    html_content = html_content .. ' width="' .. options['width'] .. '"'
+                    html_content = html_content .. ' height="' .. options['height'] .. '"'
+                    html_content = html_content .. ' class="' .. options['class'] .. '"'
+                    html_content = html_content .. ' style="' .. options['style'] .. '"'
+                    html_content = html_content .. '></iframe>\n'
+                else
+                    html_content = html_content .. '<script type="module">\n'
+                    html_content = html_content .. '    const link = document.createElement("link");\n'
+                    html_content = html_content .. '    link.rel = "stylesheet";\n'
+                    html_content = html_content .. '    link.href = "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css";\n'
+                    html_content = html_content .. '    document.head.appendChild(link);\n'
+                    html_content = html_content .. '</script>\n'
+                    html_content = html_content .. '<div id="' .. id .. '" class="jxgbox" style="width: ' ..  options['width'] .. '; height: ' ..  options['height'] .. '; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
+                    html_content = html_content .. '<script type="module">\n'
+                    html_content = html_content .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js";\n'
+                    html_content = html_content .. jsxgraph .. '\n'
+                    html_content = html_content .. '</script>\n'
                 end
-                iframe = iframe .. ' src="' .. jsx_b64 .. '" '
-                iframe = iframe .. ' sandbox="allow-scripts" '
-                iframe = iframe .. ' width="' .. options['width'] .. '"'
-                iframe = iframe .. ' height="' .. options['height'] .. '"'
-                iframe = iframe .. ' class="' .. options['class'] .. '"'
-                iframe = iframe .. ' style="' .. options['style'] .. '"'
-                iframe = iframe .. '></iframe>\n'
-
-                -- Output html
-                -- return pandoc.RawBlock("html", iframe)
 
                 if is_nonempty_string(options.echo) then
                     options.echo = options.echo == "true"
                 end
 
-                local iframe_code = pandoc.RawBlock("html", iframe)
+                local html_code = pandoc.RawBlock("html", html_content)
+
                 if options.echo == true then
                     -- local codeBlock = pandoc.CodeBlock(content.text, content.attr)
                     local codeBlock = pandoc.CodeBlock(content.text, {class='javascript'})
-                    return pandoc.Div({iframe_code, codeBlock})
+                    return pandoc.Div({html_code, codeBlock})
                 else
                     return iframe_code
                 end
@@ -278,7 +292,7 @@ function Pandoc(doc)
         iframe_id = nil,
         width = '500',
         height = '500',
-        render = 'board',
+        render = 'iframe',
         style = 'border: 1px solid black; border-radius: 10px;',
         class = '',
         echo = true,

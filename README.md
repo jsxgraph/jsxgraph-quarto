@@ -79,18 +79,18 @@ filters:
 
 ## Attributes
 
-| Attribute   | Description                                                                                   | Default |
-|-------------|-----------------------------------------------------------------------------------------------|---------|
-| `iframe_id` | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.                  | _nil_   |
-| `width`     | Width in pixels (e.g., `500`) or percent (e.g., `50%`). For CSS units, use `style`.          | `500`   |
-| `height`    | Height in pixels (e.g., `500`) or percent (e.g., `50%`). For CSS units, use `style`.         | `500`   |
-| `style`     | Custom CSS (e.g., `border: 5px solid red; border-radius: 10px;`).                             | `none`  |
-| `class`     | Add a CSS class to the `<iframe>`.                                                           | `none`  |
-| `echo`      | Show JSXGraph source code.                                                                    | `false` |
-| `src_jxg`   | Path to `jsxgraphcore.js`.                                                                    |         |
-| `src_css`   | Path to `jsxgraph.css`.                                                                       |         |
-| `src_mjx`   | Path to MathJax file.                                                                         |         |
-| `render`    | `svg` or `board` for static or interactive HTML export.                                       | `board` |
+| Attribute   | Description                                                                          | Default  |
+|-------------|--------------------------------------------------------------------------------------|----------|
+| `iframe_id` | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.         | _nil_    |
+| `width`     | Width in pixels (e.g., `500`) or percent (e.g., `50%`). For CSS units, use `style`.  | `500`    |
+| `height`    | Height in pixels (e.g., `500`) or percent (e.g., `50%`). For CSS units, use `style`. | `500`    |
+| `style`     | Custom CSS (e.g., `border: 5px solid red; border-radius: 10px;`).                    | `none`   |
+| `class`     | Add a CSS class to the `<iframe>`.                                                   | `none`   |
+| `echo`      | Show JSXGraph source code.                                                           | `false`  |
+| `src_jxg`   | Path to `jsxgraphcore.js`.                                                           |          |
+| `src_css`   | Path to `jsxgraph.css`.                                                              |          |
+| `src_mjx`   | Path to MathJax file.                                                                |          |
+| `render`    | `svg` for static and `iframe` or `div` for interactive HTML export.                  | `iframe` |
 
 ---
 
