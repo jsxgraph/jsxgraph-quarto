@@ -247,6 +247,15 @@ local function render_jsxgraph(globalOptions)
                     html_content = html_content .. ' class="' .. options['class'] .. '"'
                     html_content = html_content .. ' style="' .. options['style'] .. '"'
                     html_content = html_content .. '></iframe>\n'
+                    if options['reload'] == false then
+                        html_content = html_content .. '<button  id="button' .. id .. '">&#x21BA;</button>\n'
+                        html_content = html_content .. '<script>\n'
+                        html_content = html_content .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
+                        html_content = html_content .. '    const iframe' .. id .. ' = document.getElementById("' .. id .. '")\n'
+                        html_content = html_content .. '    btn' .. id .. '.addEventListener("click", () => { iframe.contentWindow.location.reload(); });\n'
+                        html_content = html_content .. '    \n'
+                        html_content = html_content .. '</script>\n'
+                    end
                 end
 
                 if is_nonempty_string(options.echo) then
