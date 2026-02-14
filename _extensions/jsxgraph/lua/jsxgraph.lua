@@ -211,7 +211,7 @@ local function render_jsxgraph(globalOptions)
                     html_content = html_content .. '    link.href = "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css";\n'
                     html_content = html_content .. '    document.head.appendChild(link);\n'
                     html_content = html_content .. '</script>\n'
-                    html_content = html_content .. '<div id="' .. id .. ' width="' .. options['width'] .. ' height="' .. options['height'] .. '" class="jxgbox"></div>\n'
+                    html_content = html_content .. '<div id="' .. id .. ' width="' .. options['width'] .. '" height="' .. options['height'] .. '" class="jxgbox"></div>\n'
                     html_content = html_content .. '<script type="module">\n'
                     html_content = html_content .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js";\n'
                     html_content = html_content .. jsxgraph .. '\n'
