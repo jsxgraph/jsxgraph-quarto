@@ -241,7 +241,7 @@ local function render_jsxgraph(globalOptions)
                         html_content = html_content .. ' id="' .. options['iframe_id'] .. '" '
                     end
                     html_content = html_content .. ' src="' .. jsx_b64 .. '" '
-                    html_content = html_content .. ' sandbox="allow-scripts" '
+                    html_content = html_content .. ' sandbox="allow-scripts  allow-same-origin" '
                     html_content = html_content .. ' width="' .. options['width'] .. '"'
                     html_content = html_content .. ' height="' .. options['height'] .. '"'
                     html_content = html_content .. ' class="' .. options['class'] .. '"'
