@@ -205,13 +205,7 @@ local function render_jsxgraph(globalOptions)
                 jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("' .. id .. '",')
 
                 if options['render'] == 'div' then
-                    html_content = html_content .. '<script type="module">\n'
-                    html_content = html_content .. '    const link = document.createElement("link");\n'
-                    html_content = html_content .. '    link.rel = "stylesheet";\n'
-                    html_content = html_content .. '    link.href = "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css";\n'
-                    html_content = html_content .. '    document.head.appendChild(link);\n'
-                    html_content = html_content .. '</script>\n'
-                    html_content = html_content .. '<div id="' .. id .. '" width="' .. options['width'] .. '" height="' .. options['height'] .. '" class="jxgbox"></div>\n'
+                    html_content = html_content .. '<div id="' .. id .. '" width="' .. options['width'] .. '" height="' .. options['height'] .. '" style="<style>.jxgbox { position: relative; overflow: hidden; background-color: #fff; border-style: solid; border-width: 1px; border-color: #356aa0; border-radius: 10px; -webkit-border-radius: 10px; margin: 0; -ms-touch-action: none; }</style>"></div>\n'
                     html_content = html_content .. '<script type="module">\n'
                     html_content = html_content .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js";\n'
                     html_content = html_content .. jsxgraph .. '\n'
