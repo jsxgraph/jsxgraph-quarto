@@ -254,7 +254,6 @@ local function render_jsxgraph(globalOptions)
                         html_content = html_content .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
                         html_content = html_content .. '    const iframe' .. id .. ' = document.getElementsByName("iframe' .. id .. '")[0]\n'
                         html_content = html_content .. '    btn' .. id .. '.addEventListener("click", () => { iframe' .. id .. '.src = iframe' .. id .. '.src; });\n'--contentWindow.location.reload();
-                        html_content = html_content .. '    \n'
                         html_content = html_content .. '</script>\n'
                     end
                 end
