@@ -248,7 +248,12 @@ local function render_jsxgraph(globalOptions)
                     html_content = html_content .. ' style="' .. options['style'] .. '"'
                     html_content = html_content .. ' name="iframe' .. id .. '"'
                     html_content = html_content .. '></iframe>\n'
-                    if options['reload'] == 'true' then
+
+                    if is_nonempty_string(options.reload) then
+                        options.reload = options.reload == "true"
+                    end
+
+                    if options.reload then
                         html_content = html_content .. '<button  id="button' .. id .. '" style="background-color:transparent;color:#000000;border:none;font-size:16px;cursor:pointer;">&#x21BA;</button>\n'
                         html_content = html_content .. '<script>\n'
                         html_content = html_content .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
@@ -258,18 +263,18 @@ local function render_jsxgraph(globalOptions)
                     end
                 end
 
-                if is_nonempty_string(options['echo']) then
-                    options['echo'] = "true"
+                if is_nonempty_string(options.echo) then
+                    options.echo = options.echo == "true"
                 end
 
                 local html_code = pandoc.RawBlock("html", html_content)
 
-                if options['echo'] == 'true' then
+                if options.echo then
                     -- local codeBlock = pandoc.CodeBlock(content.text, content.attr)
                     local codeBlock = pandoc.CodeBlock(content.text, {class='javascript'})
                     return pandoc.Div({html_code, codeBlock})
                 else
-                    return iframe_code
+                    return html_code
                 end
             end
         end
