@@ -207,63 +207,67 @@ local function render_jsxgraph(globalOptions)
                 local html = ''
 
                 if options['render'] == 'div' then
-                    html = html .. '<div id="' .. id .. '" style="width: ' .. options['width'] .. 'px; height: ' .. options['height'] .. 'px; position: relative; overflow: hidden; background-color: #fff; border-style: solid; border-width: 1px; border-color: #356aa0; border-radius: 10px; -webkit-border-radius: 10px; margin: 0; -ms-touch-action: none;"></div>\n'
+                    html = html .. '<div id="' .. id .. '" style="width: ' .. options['width'] .. 'px; height: ' .. options['height'] .. 'px; margin-bottom: 16px; position: relative; overflow: hidden; background-color: #fff; border-style: solid; border-width: 1px; border-color: #356aa0; border-radius: 10px; -webkit-border-radius: 10px; -ms-touch-action: none;' .. options['style'] .. '"></div>\n'
                     html = html .. '<script type="module">\n'
                     html = html .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.mjs";\n'
                     html = html .. jsxgraph .. '\n'
                     html = html .. '</script>\n'
                 else
-                    local iframe = '<!DOCTYPE html>\n'
-                    iframe = iframe .. '<html lang="en">\n'
-                    iframe = iframe .. '  <head>\n'
-                    iframe = iframe .. '    <meta charset="UTF-8">\n'
-                    iframe = iframe .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
-                    iframe = iframe .. '    <script src="' .. options['src_jxg'] .. '"></script>\n'
-                    iframe = iframe .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
-                    iframe = iframe .. '    <style>\n'
-                    iframe = iframe .. '      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }\n'
-                    iframe = iframe .. '      .jxgbox { border: none; }\n'
-                    iframe = iframe .. '    </style>\n'
-                    iframe = iframe .. '  </head>\n'
-                    iframe = iframe .. '  <body>\n'
-                    iframe = iframe .. '    <div id="' .. id ..
+                    local icontent = '<!DOCTYPE html>\n'
+                    icontent = icontent .. '<html lang="en">\n'
+                    icontent = icontent .. '  <head>\n'
+                    icontent = icontent .. '    <meta charset="UTF-8">\n'
+                    icontent = icontent .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
+                    icontent = icontent .. '    <script src="' .. options['src_jxg'] .. '"></script>\n'
+                    icontent = icontent .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
+                    icontent = icontent .. '    <style>\n'
+                    icontent = icontent .. '      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }\n'
+                    icontent = icontent .. '      .jxgbox { border: none; }\n'
+                    icontent = icontent .. '    </style>\n'
+                    icontent = icontent .. '  </head>\n'
+                    icontent = icontent .. '  <body>\n'
+                    icontent = icontent .. '    <div id="' .. id ..
                                '" class="jxgbox" style="width: 100%; height: 100%; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
-                    iframe = iframe .. '    <script>\n'
-                    iframe = iframe .. jsxgraph .. '\n'
-                    iframe = iframe .. '    </script>\n'
-                    iframe = iframe .. '  </body>\n'
-                    iframe = iframe .. '</html>\n'
+                    icontent = icontent .. '    <script>\n'
+                    icontent = icontent .. jsxgraph .. '\n'
+                    icontent = icontent .. '    </script>\n'
+                    icontent = icontent .. '  </body>\n'
+                    icontent = icontent .. '</html>\n'
 
                     -- Content base64
 
-                    local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(iframe);
+                    local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(icontent);
 
                     -- Create iframe
 
-                    html = '<iframe '
+                    local iframe = '<iframe '
                     if options['iframe_id'] ~= nil then
-                        html = html .. ' id="' .. options['iframe_id'] .. '" '
+                        iframe = iframe .. ' id="' .. options['iframe_id'] .. '" '
                     end
-                    html = html .. ' src="' .. jsx_b64 .. '" '
-                    html = html .. ' sandbox="allow-scripts  allow-same-origin" '
-                    html = html .. ' width="' .. options['width'] .. '"'
-                    html = html .. ' height="' .. options['height'] .. '"'
-                    html = html .. ' class="' .. options['class'] .. '"'
-                    html = html .. ' style="' .. options['style'] .. '"'
-                    html = html .. ' name="iframe' .. id .. '"'
-                    html = html .. '></iframe>\n'
+                    iframe = iframe .. ' src="' .. jsx_b64 .. '" '
+                    iframe = iframe .. ' sandbox="allow-scripts  allow-same-origin" '
+                    iframe = iframe .. ' width="' .. options['width'] .. '"'
+                    iframe = iframe .. ' height="' .. options['height'] .. '"'
+                    iframe = iframe .. ' class="' .. options['class'] .. '"'
+                    iframe = iframe .. ' style="position: relative; margin:0; padding:0; display: block; z-index: 1; ' .. options['style'] .. ';"'
+                    iframe = iframe .. ' name="iframe' .. id .. '"'
+                    iframe = iframe .. '></iframe>\n'
 
                     if is_nonempty_string(options.reload) then
                         options.reload = options.reload == "true"
                     end
 
                     if options.reload then
-                        html = html .. '<button  id="button' .. id .. '" style="background-color:transparent;color:#000000;border:none;font-size:16px;cursor:pointer;">&#x21BA;</button>\n'
+                        html = '<div style="border: none; margin-bottom: 10px; position: relative; display: inline-block;\n">'
+                        html = html .. '<button  id="button' .. id .. '" style="position: absolute; bottom: 0px; left: 2px; z-index: 2; background-color: transparent; color: #000000; border: none; font-size: 16px; cursor: pointer;">&#x21BA;</button>'.. iframe .. '\n'
+                        html = html .. '</div>\n'
                         html = html .. '<script>\n'
                         html = html .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
                         html = html .. '    const iframe' .. id .. ' = document.getElementsByName("iframe' .. id .. '")[0]\n'
                         html = html .. '    btn' .. id .. '.addEventListener("click", () => { iframe' .. id .. '.src = iframe' .. id .. '.src; });\n'--contentWindow.location.reload();
                         html = html .. '</script>\n'
+                    else
+                        html = iframe
                     end
                 end
 
