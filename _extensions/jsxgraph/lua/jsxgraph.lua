@@ -310,9 +310,16 @@ local function render_jsxgraph(globalOptions)
 
                     if options.reload then
 
+                        -- Fix div vs iframe margin differences.
+
+                        local margin_b = 10;
+                        if options.echo then
+                            margin_b = -8
+                        end
+
                         -- Add reload button.
 
-                        html = '<div style="border: none; margin-bottom: 10px; position: relative; display: inline-block;\n">'
+                        html = '<div style="border: none; margin-bottom: ' .. margin_b .. 'px; position: relative; display: inline-block;\n">'
                         html = html .. '<button  id="button' .. id .. '" style="position: absolute; bottom: 0px; left: 2px; z-index: 2; background-color: transparent; color: #000000; border: none; font-size: 16px; cursor: pointer;">&#x21BA;</button>\n'
                         html = html .. iframe .. '\n'
                         html = html .. '</div>\n'
