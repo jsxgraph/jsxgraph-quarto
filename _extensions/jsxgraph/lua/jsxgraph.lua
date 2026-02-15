@@ -7,18 +7,6 @@
 
 local EXTENSION_NAME = "JSXGraph"
 
--- Activate debugging output.
-
-local debugging = true
-
--- Debug output.
-
-local function debug_out (text)
-    if debugging then
-        quarto.log.output(tostring(text))
-    end
-end
-
 -- Counter for JSXGraph boards.
 
 local svg_counter = 0
@@ -26,10 +14,6 @@ local svg_counter = 0
 local script_path = PANDOC_SCRIPT_FILE
 local lua_dir = pandoc.path.directory(script_path)
 local extension_dir = pandoc.path.directory(lua_dir)
-
-debug_out('script_path' .. script_path)
-debug_out('lua_dir' .. lua_dir)
-debug_out('extension_dir' .. extension_dir)
 
 -- Helper function to copy a table.
 
@@ -66,8 +50,6 @@ local function render_jsxgraph(globalOptions)
     function CodeBlock(content)
 
         if content.classes:includes("jsxgraph") then
-
-            debug_out('JSXGraph block detected.')
 
             -- Initialise options table.
 
@@ -124,13 +106,9 @@ local function render_jsxgraph(globalOptions)
 
             local id = uuid()
 
-            debug_out('id' .. id)
-
             -- next JSXGraph board.
 
             svg_counter = svg_counter + 1
-
-            debug_out('svg_counter' .. svg_counter)
 
             -- JSXGraph – javascript code.
 
@@ -150,15 +128,11 @@ local function render_jsxgraph(globalOptions)
                 render = options['render']
             end
 
-            debug_out('render' .. render)
-
             -- Set 'echo'.
 
             if is_nonempty_string(options.echo) then
                 options.echo = options.echo == "true"
             end
-
-            debug_out('options.echo' .. tostring(options.echo))
 
             if render == 'svg' then
 
@@ -247,8 +221,6 @@ local function render_jsxgraph(globalOptions)
                 local handle = io.popen(node_cmd)
                 local result = handle:read("*a")
                 handle:close()
-
-                debug_out('result' .. result)
 
                 -- Create svg file.
 
