@@ -1,7 +1,9 @@
 -- JSXGraph filter
 --[[
   MIT License, see file LICENSE
-]] --- Extension name constant
+]]
+
+--- Extension name constant
 
 local EXTENSION_NAME = "jsxgraph"
 
