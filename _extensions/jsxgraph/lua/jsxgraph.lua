@@ -154,7 +154,7 @@ local function render_jsxgraph(globalOptions)
 
                 -- Content mjs file after JSXGraph code.
 
--- ToDo: Adopt svg style option in code_after_board.ms.
+                -- ToDo: Adopt svg style option in code_after_board.ms.
 
                 local resource_after = pandoc.path.join({extension_dir, "resources", "mjs", "code_after_board.mjs"})
 
@@ -256,13 +256,13 @@ local function render_jsxgraph(globalOptions)
 
                     -- Code for <div>.
 
--- ToDo: Handle width and height with %.
--- ToDo: Content of jsxgraph.css only in style.
+                    -- ToDo: Handle width and height with %.
+                    -- ToDo: Content of jsxgraph.css only in style.
 
                     html = html .. '<div id="' .. id .. '" style="width: ' .. options['width'] .. 'px; height: ' .. options['height'] .. 'px; margin-bottom: 16px; position: relative; overflow: hidden; background-color: #fff; border-style: solid; border-width: 1px; border-color: #356aa0; border-radius: 10px; -webkit-border-radius: 10px; -ms-touch-action: none;' .. options['style'] .. '"></div>\n'
                     html = html .. '<script type="module">\n'
 
--- ToDo: Insert src_jxg.
+                    -- ToDo: Insert src_jxg.
 
                     html = html .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.mjs";\n'
                     html = html .. jsxgraph .. '\n'
@@ -324,7 +324,7 @@ local function render_jsxgraph(globalOptions)
 
                         -- Fix div vs iframe margin differences.
 
--- ToDo: Different behaviour in revealjs.
+                        -- ToDo: Different behaviour in revealjs.
 
                         local margin_b = 10;
                         if options.echo then
@@ -333,7 +333,7 @@ local function render_jsxgraph(globalOptions)
 
                         -- Add reload button.
 
--- ToDo: Button only with px?
+                        -- ToDo: Button only with px?
 
                         html = '<div style="border: none; margin-bottom: ' .. margin_b .. 'px; position: relative; display: inline-block;\n">'
                         html = html .. '<button  id="button' .. id .. '" style="position: absolute; bottom: 0px; left: 2px; z-index: 2; background-color: transparent; color: #000000; border: none; font-size: 16px; cursor: pointer;">&#x21BA;</button>\n'
@@ -392,7 +392,7 @@ function Pandoc(doc)
         echo = false,
         reload = false,
 
--- ToDo: How to handle mjs?
+        -- ToDo: How to handle mjs?
 
         src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
