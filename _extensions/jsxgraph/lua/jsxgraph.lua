@@ -13,10 +13,6 @@ local debugging = true
 
 -- Debug output.
 
-local function debug_out (text, out)
-    quarto.log.output(tostring(text) .. ' – ' .. tostring(out))
-end
-
 local function debug_out (text)
     if debugging then
         quarto.log.output(tostring(text))
@@ -31,9 +27,9 @@ local script_path = PANDOC_SCRIPT_FILE
 local lua_dir = pandoc.path.directory(script_path)
 local extension_dir = pandoc.path.directory(lua_dir)
 
-debug_out('script_path', script_path)
-debug_out('lua_dir', lua_dir)
-debug_out('extension_dir', extension_dir)
+debug_out('script_path' .. script_path)
+debug_out('lua_dir' .. lua_dir)
+debug_out('extension_dir' .. extension_dir)
 
 -- Helper function to copy a table.
 
@@ -128,13 +124,13 @@ local function render_jsxgraph(globalOptions)
 
             local id = uuid()
 
-            debug_out('id', id)
+            debug_out('id' .. id)
 
             -- next JSXGraph board.
 
             svg_counter = svg_counter + 1
 
-            debug_out('svg_counter', svg_counter)
+            debug_out('svg_counter' .. svg_counter)
 
             -- JSXGraph – javascript code.
 
@@ -154,7 +150,7 @@ local function render_jsxgraph(globalOptions)
                 render = options['render']
             end
 
-            debug_out('render', render)
+            debug_out('render' .. render)
 
             -- Set 'echo'.
 
@@ -162,7 +158,7 @@ local function render_jsxgraph(globalOptions)
                 options.echo = options.echo == "true"
             end
 
-            debug_out('options.echo', options.echo)
+            debug_out('options.echo' .. options.echo)
 
             if render == 'svg' then
 
@@ -252,7 +248,7 @@ local function render_jsxgraph(globalOptions)
                 local result = handle:read("*a")
                 handle:close()
 
-                debug_out('result', result)
+                debug_out('result' .. result)
 
                 -- Create svg file.
 
