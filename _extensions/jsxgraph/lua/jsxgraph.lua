@@ -5,8 +5,6 @@
 
 local EXTENSION_NAME = "jsxgraph"
 
-quarto.log.output("Version 0.9.6")
-
 -- Counter for JSXGraph boards
 
 local svg_counter = 0
