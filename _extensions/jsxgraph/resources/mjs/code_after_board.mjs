@@ -7,7 +7,7 @@ if (svgElement) {
     const originalWidth = parseFloat(svgElement.getAttribute('width')) || 100;
     const originalHeight = parseFloat(svgElement.getAttribute('height')) || 100;
 
-    const borderWidth = 2;
+    const borderWidth = 1;
     const borderRadius = 12;
     const padding = 0;
     const backgroundColor = 'none';
