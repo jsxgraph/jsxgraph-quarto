@@ -158,7 +158,7 @@ local function render_jsxgraph(globalOptions)
                 options.echo = options.echo == "true"
             end
 
-            debug_out('options.echo' .. options.echo)
+            debug_out('options.echo' .. tostring(options.echo))
 
             if render == 'svg' then
 
