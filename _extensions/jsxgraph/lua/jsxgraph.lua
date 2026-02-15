@@ -5,7 +5,7 @@
 
 local EXTENSION_NAME = "jsxgraph"
 
--- Counter for JSXGraph boards
+-- Counter for JSXGraph boards.
 
 local svg_counter = 0
 
@@ -13,9 +13,12 @@ local script_path = PANDOC_SCRIPT_FILE
 local lua_dir = pandoc.path.directory(script_path)
 local extension_dir = pandoc.path.directory(lua_dir)
 
--- Helper function to copy a table
+-- Helper function to copy a table.
+
 function copyTable(obj, seen)
+
     -- Handle non-tables and previously-seen tables.
+
     if type(obj) ~= 'table' then
         return obj
     end
@@ -24,6 +27,7 @@ function copyTable(obj, seen)
     end
 
     -- New table; mark it as seen and copy recursively.
+
     local s = seen or {}
     local res = {}
     s[obj] = res
@@ -33,7 +37,8 @@ function copyTable(obj, seen)
     return setmetatable(res, getmetatable(obj))
 end
 
--- Helper for non empty string
+-- Helper for non empty string.
+
 function is_nonempty_string(x)
     return x ~= nil and type(x) == "string"
 end
@@ -43,16 +48,18 @@ local function render_jsxgraph(globalOptions)
     function CodeBlock(content)
 
         if content.classes:includes("jsxgraph") then
-            -- Initialise options table
+
+            -- Initialise options table.
+
             local options = copyTable(globalOptions)
 
-            -- Parse options
+            -- Parse options.
 
             local attr
-            -- Global _quarto.yml should be here
-            -- quarto.log.output('>>>', content.meta)
 
-            -- Read options from document yml
+            -- Global _quarto.yml should be here.
+
+            -- Read options from document yml.
 
             if quarto.metadata ~= nil then
                 attr = quarto.metadata.get('jsxgraph')
@@ -68,7 +75,7 @@ local function render_jsxgraph(globalOptions)
                 end
             end
 
-            -- Read options in code block
+            -- Read options in code block.
 
             attr = content.attr.attributes
             if type(attr) == "userdata" then
@@ -82,7 +89,7 @@ local function render_jsxgraph(globalOptions)
                 end
             end
 
-            -- generate id
+            -- Generate id.
 
             math.randomseed(os.time() + os.clock() * 1000000)
             local function uuid()
@@ -99,36 +106,45 @@ local function render_jsxgraph(globalOptions)
 
             local id = uuid()
 
-            -- next JSXGraph board
+            -- next JSXGraph board.
 
             svg_counter = svg_counter + 1
 
-            -- JSXGraph
+            -- JSXGraph – javascript code.
 
             local jsxgraph = content.text
 
+            -- Replace const BOARDID, e.g. code from https://jsxgraph.org/share.
+
+            jsxgraph = jsxgraph:gsub("initBoard%(%s*BOARDID%s*,", 'initBoard("jxg_box",')
+
+            -- Default value 'render'.
+
             local render = 'svg'
+
+            -- Set 'render'.
 
             if quarto.doc.is_format("html") then
                 render = options['render']
-                -- quarto.log.output('html:' .. render)
             end
 
-            -- Set echo.
+            -- Set 'echo'.
 
             if is_nonempty_string(options.echo) then
                 options.echo = options.echo == "true"
             end
 
             if render == 'svg' then
-                --svg
 
-                -- replace BOARDID od '...' by 'jxg_box'
+                -- SVG export.
 
-                jsxgraph = jsxgraph:gsub("initBoard%(%s*BOARDID%s*,", 'initBoard("jxg_box",')
+                -- Replace id by 'jxg_box'.
+
                 jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("jxg_box",')
 
-                -- Create mjs file for nodejs
+                -- Create mjs file for nodejs.
+
+                -- Content mjs file before JSXGraph code.
 
                 local resource_before = pandoc.path.join({extension_dir, "resources", "mjs", "code_before_board.mjs"})
 
@@ -136,67 +152,85 @@ local function render_jsxgraph(globalOptions)
                 local content_before = file_before:read("*a")
                 file_before:close()
 
+                -- Content mjs file after JSXGraph code.
+
                 local resource_after = pandoc.path.join({extension_dir, "resources", "mjs", "code_after_board.mjs"})
 
                 local file_after = io.open(resource_after, "r")
                 local content_after = file_after:read("*a")
                 file_after:close()
 
-                -- Delete existing file
-                --os.remove("code_node_board.mjs")
+                -- Create hidden directory.
 
                 local function ensure_hidden_dir(path)
-                  if package.config:sub(1,1) == "\\" then
-                    -- Windows
-                    os.execute('mkdir "' .. path .. '"')
-                    os.execute('attrib +h "' .. path .. '"')
-                  else
-                    -- macOS / Linux
-                    os.execute('mkdir -p "' .. path .. '"')
-                  end
+                    if package.config:sub(1,1) == "\\" then
+                        -- Windows
+                        os.execute('mkdir "' .. path .. '"')
+                        os.execute('attrib +h "' .. path .. '"')
+                    else
+                        -- macOS / Linux
+                        os.execute('mkdir -p "' .. path .. '"')
+                    end
                 end
+
+                -- Set directory path.
 
                 local function join_path(...)
-                  local SEP = package.config:sub(1,1)  -- "\\" Windows, "/" Unix
-                  return table.concat({...}, SEP)
+                    local SEP = package.config:sub(1,1)  -- "\\" Windows, "/" Unix
+                    return table.concat({...}, SEP)
                 end
 
-                local temp_dir = ".temp_jsxgraph"
+                -- Hidden directory for mjs and svg files.
 
-                -- Prefix for files
+                local temp_dir = ".temp_jsxgraph"
+                ensure_hidden_dir(temp_dir)
+
+                -- Prefix for files.
+
                 local prefix = "file_" .. svg_counter .. "_"
 
-                ensure_hidden_dir(temp_dir)
+                -- Set file paths.
 
                 local file_node_path = join_path(temp_dir, prefix .. "code_node_board.mjs")
                 local file_svg_path = join_path(temp_dir, prefix .. "board.svg")
 
-                -- New mjs file
-                local file_node = io.open(file_node_path, "w")
+                -- Merge content.
 
-                -- Merge content
                 local content_node = content_before .. jsxgraph .. content_after .. [[
                 ]]
+
+                -- Create mjs file.
+
+                local file_node = io.open(file_node_path, "w")
                 file_node:write(content_node)
                 file_node:close()
 
+                -- Create nodejs command.
+
                 local node_cmd = string.format(
-                    "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q",
-                    options['width'],
-                    options['height'],
-                    options['style']
+                        "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q",
+                        options['width'],
+                        options['height'],
+                        options['style']
                 )
 
-                -- Execute nodejs
+                -- Execute nodejs command.
+
                 local handle = io.popen(node_cmd)
                 local result = handle:read("*a")
                 handle:close()
 
-                -- SVG file
+                -- Create svg file.
+
                 local svg_file = io.open(file_svg_path, "r")
                 svg_file:close()
+
+                -- Create pandoc.Image.
+
                 local img = pandoc.Image({}, file_svg_path, "")
                 local svg_code = pandoc.Para({img})
+
+                -- Return content with/without JSXGRaph code.
 
                 if options.echo then
                     local codeBlock = pandoc.CodeBlock(content.text, {class='javascript'})
@@ -205,25 +239,28 @@ local function render_jsxgraph(globalOptions)
                     return svg_code
                 end
             else
-                -- replace BOARDID
-
-                jsxgraph = jsxgraph:gsub("initBoard%(%s*BOARDID%s*,", 'initBoard("' .. id .. '",')
-
-                -- replace id
+                -- Replace id by uuid.
 
                 jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("' .. id .. '",')
 
-                -- HTML code for <div> and <iframe>
+                -- Code for <div> and <iframe>.
 
                 local html = ''
 
                 if options['render'] == 'div' then
+
+                    -- Code for <div>.
+
                     html = html .. '<div id="' .. id .. '" style="width: ' .. options['width'] .. 'px; height: ' .. options['height'] .. 'px; margin-bottom: 16px; position: relative; overflow: hidden; background-color: #fff; border-style: solid; border-width: 1px; border-color: #356aa0; border-radius: 10px; -webkit-border-radius: 10px; -ms-touch-action: none;' .. options['style'] .. '"></div>\n'
                     html = html .. '<script type="module">\n'
                     html = html .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.mjs";\n'
                     html = html .. jsxgraph .. '\n'
                     html = html .. '</script>\n'
                 else
+
+                    -- Code for <iframe>.
+
+                    -- Create iframe content.
                     local icontent = '<!DOCTYPE html>\n'
                     icontent = icontent .. '<html lang="en">\n'
                     icontent = icontent .. '  <head>\n'
@@ -237,19 +274,18 @@ local function render_jsxgraph(globalOptions)
                     icontent = icontent .. '    </style>\n'
                     icontent = icontent .. '  </head>\n'
                     icontent = icontent .. '  <body>\n'
-                    icontent = icontent .. '    <div id="' .. id ..
-                               '" class="jxgbox" style="width: 100%; height: 100%; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
+                    icontent = icontent .. '    <div id="' .. id .. '" class="jxgbox" style="width: 100%; height: 100%; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
                     icontent = icontent .. '    <script>\n'
                     icontent = icontent .. jsxgraph .. '\n'
                     icontent = icontent .. '    </script>\n'
                     icontent = icontent .. '  </body>\n'
                     icontent = icontent .. '</html>\n'
 
-                    -- Content base64
+                    -- Base64 of iframe content.
 
                     local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(icontent);
 
-                    -- Create iframe
+                    -- Create iframe.
 
                     local iframe = '<iframe '
                     if options['iframe_id'] ~= nil then
@@ -264,13 +300,21 @@ local function render_jsxgraph(globalOptions)
                     iframe = iframe .. ' name="iframe' .. id .. '"'
                     iframe = iframe .. '></iframe>\n'
 
+                    -- Set reload option.
+
                     if is_nonempty_string(options.reload) then
                         options.reload = options.reload == "true"
                     end
 
+                    -- Add iframe.
+
                     if options.reload then
+
+                        -- Add reload button.
+
                         html = '<div style="border: none; margin-bottom: 10px; position: relative; display: inline-block;\n">'
-                        html = html .. '<button  id="button' .. id .. '" style="position: absolute; bottom: 0px; left: 2px; z-index: 2; background-color: transparent; color: #000000; border: none; font-size: 16px; cursor: pointer;">&#x21BA;</button>'.. iframe .. '\n'
+                        html = html .. '<button  id="button' .. id .. '" style="position: absolute; bottom: 0px; left: 2px; z-index: 2; background-color: transparent; color: #000000; border: none; font-size: 16px; cursor: pointer;">&#x21BA;</button>\n'
+                        html = html .. iframe .. '\n'
                         html = html .. '</div>\n'
                         html = html .. '<script>\n'
                         html = html .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
@@ -282,10 +326,13 @@ local function render_jsxgraph(globalOptions)
                     end
                 end
 
+                -- Create pandoc.RawBlock.
+
                 local html_code = pandoc.RawBlock("html", html)
 
+                -- Return content with/without JSXGRaph code.
+
                 if options.echo then
-                    -- local codeBlock = pandoc.CodeBlock(content.text, content.attr)
                     local codeBlock = pandoc.CodeBlock(content.text, {class='javascript'})
                     return pandoc.Div({html_code, codeBlock})
                 else
@@ -311,6 +358,7 @@ function Pandoc(doc)
 
     ---Configuration options for the extension
     ---@type table<string, any>
+
     local options = {
         iframe_id = nil,
         width = '500',
@@ -325,7 +373,8 @@ function Pandoc(doc)
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js'
     }
 
-    -- Process global attributes
+    -- Process global attributes.
+
     local globalOptions = doc.meta["jsxgraph"]
     if type(globalOptions) == "table" then
         for k, v in pairs(globalOptions) do
