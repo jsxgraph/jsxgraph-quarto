@@ -70,7 +70,6 @@ local function render_jsxgraph(globalOptions)
                         else
                             options[k] = pandoc.utils.stringify(v)
                         end
-                        --quarto.log.output('>>>', k, options[k])
                     end
                 end
             end
@@ -85,7 +84,6 @@ local function render_jsxgraph(globalOptions)
                     else
                         options[k] = pandoc.utils.stringify(v)
                     end
-                    -- quarto.log.output(k, options[k])
                 end
             end
 
@@ -93,7 +91,7 @@ local function render_jsxgraph(globalOptions)
 
             math.randomseed(os.time() + os.clock() * 1000000)
             local function uuid()
-                local template = 'xxxxxxxx_xxxx_xxxx_xxxx_xxxxxxxxxxxx'
+                local template = 'xxxxxxxx_xxxx_xxxx_xxxx_xxxxxxxx'
                 return 'JXG' .. string.gsub(template, '[xy]', function(c)
                     local r = math.random(0, 15)
                     if c == 'x' then
@@ -136,7 +134,7 @@ local function render_jsxgraph(globalOptions)
 
             if render == 'svg' then
 
-                -- SVG export.
+                -- Export svg.
 
                 -- Replace id by 'jxg_box'.
 
@@ -164,11 +162,11 @@ local function render_jsxgraph(globalOptions)
 
                 local function ensure_hidden_dir(path)
                     if package.config:sub(1,1) == "\\" then
-                        -- Windows
+                        -- Windows.
                         os.execute('mkdir "' .. path .. '"')
                         os.execute('attrib +h "' .. path .. '"')
                     else
-                        -- macOS / Linux
+                        -- macOS / Linux.
                         os.execute('mkdir -p "' .. path .. '"')
                     end
                 end
@@ -239,6 +237,9 @@ local function render_jsxgraph(globalOptions)
                     return svg_code
                 end
             else
+
+                -- Export html.
+
                 -- Replace id by uuid.
 
                 jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("' .. id .. '",')
@@ -261,6 +262,7 @@ local function render_jsxgraph(globalOptions)
                     -- Code for <iframe>.
 
                     -- Create iframe content.
+
                     local icontent = '<!DOCTYPE html>\n'
                     icontent = icontent .. '<html lang="en">\n'
                     icontent = icontent .. '  <head>\n'
