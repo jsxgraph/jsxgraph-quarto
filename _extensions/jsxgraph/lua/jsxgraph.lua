@@ -116,6 +116,12 @@ local function render_jsxgraph(globalOptions)
                 -- quarto.log.output('html:' .. render)
             end
 
+            -- Set echo.
+
+            if is_nonempty_string(options.echo) then
+                options.echo = options.echo == "true"
+            end
+
             if render == 'svg' then
                 --svg
 
@@ -192,7 +198,14 @@ local function render_jsxgraph(globalOptions)
                 local svg_file = io.open(file_svg_path, "r")
                 svg_file:close()
                 local img = pandoc.Image({}, file_svg_path, "")
-                return pandoc.Para({img})
+                local svg_code = pandoc.Para({img})
+
+                if options.echo then
+                    local codeBlock = pandoc.CodeBlock(content.text, {class='javascript'})
+                    return pandoc.Div({svg_code, codeBlock})
+                else
+                    return svg_code
+                end
             else
                 -- replace BOARDID
 
@@ -269,10 +282,6 @@ local function render_jsxgraph(globalOptions)
                     else
                         html = iframe
                     end
-                end
-
-                if is_nonempty_string(options.echo) then
-                    options.echo = options.echo == "true"
                 end
 
                 local html_code = pandoc.RawBlock("html", html)
