@@ -257,6 +257,7 @@ local function render_jsxgraph(globalOptions)
                     -- Code for <div>.
 
 -- ToDo: Handle width and height with %.
+-- ToDo: Content of jsxgraph.css only in style.
 
                     html = html .. '<div id="' .. id .. '" style="width: ' .. options['width'] .. 'px; height: ' .. options['height'] .. 'px; margin-bottom: 16px; position: relative; overflow: hidden; background-color: #fff; border-style: solid; border-width: 1px; border-color: #356aa0; border-radius: 10px; -webkit-border-radius: 10px; -ms-touch-action: none;' .. options['style'] .. '"></div>\n'
                     html = html .. '<script type="module">\n'
@@ -390,6 +391,9 @@ function Pandoc(doc)
         class = '',
         echo = false,
         reload = false,
+
+-- ToDo: How to handle mjs?
+
         src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js'
