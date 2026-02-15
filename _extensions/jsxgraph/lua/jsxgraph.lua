@@ -5,7 +5,7 @@
 
 --- Extension name constant
 
-local EXTENSION_NAME = "jsxgraph"
+local EXTENSION_NAME = "JSXGraph"
 
 -- Counter for JSXGraph boards.
 
