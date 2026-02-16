@@ -263,6 +263,8 @@ local function render_jsxgraph(globalOptions)
 
                 -- Include MathJax.
 
+-- ToDo: Include local MathJax.
+
                 icontent = icontent .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
 
                 -- Include local JSXGraph.
