@@ -289,16 +289,19 @@ local function render_jsxgraph(globalOptions)
                 iframe = iframe .. ' src="' .. jsx_b64 .. '" '
                 iframe = iframe .. ' sandbox="allow-scripts  allow-same-origin" '
 
-                -- Set width.
+                -- Set width an height.
 
-                options['width'] = options['width']:match("^%s*(.-)%s*$")
-                if options['width']:match("^%d+$") then
-                    options['width'] = options['width'] .. "px"
+                local function normalize_size(value)
+                    value = value:match("^%s*(.-)%s*$")
+                    if value:match("^%d+$") then
+                        return value .. "px"
+                    else
+                        return value
+                    end
                 end
-                options['height'] = options['height']:match("^%s*(.-)%s*$")
-                if options['height']:match("^%d+$") then
-                    options['height'] = options['height'] .. "px"
-                end
+
+                options['width'] = normalize_size(options['width'])
+                options['height'] = normalize_size(options['height'])
 
                 --iframe = iframe .. ' width="' .. options['width'] .. '"'
                 --iframe = iframe .. ' height="' .. options['height'] .. '"'
