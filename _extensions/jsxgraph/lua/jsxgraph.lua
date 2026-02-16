@@ -303,8 +303,6 @@ local function render_jsxgraph(globalOptions)
                 options['width'] = normalize_size(options['width'])
                 options['height'] = normalize_size(options['height'])
 
-                --iframe = iframe .. ' width="' .. options['width'] .. '"'
-                --iframe = iframe .. ' height="' .. options['height'] .. '"'
                 iframe = iframe .. ' class="' .. options['class'] .. '"'
                 iframe = iframe .. ' style="width:' .. options['width'] .. '; height:' .. options['height'] .. ';position: relative; margin:0; padding:0; display: block; z-index: 1; ' .. options['style'] .. ';"'
                 iframe = iframe .. ' name="iframe' .. id .. '"'
@@ -330,8 +328,6 @@ local function render_jsxgraph(globalOptions)
                     end
 
                     -- Add reload button.
-
-                    -- ToDo: Button only with px?
 
                     html = '<div style="border: none; margin-bottom: ' .. margin_b .. 'px; position: relative; display: inline-block;\n">'
                     html = html .. '<button  id="button' .. id .. '" style="position: absolute; bottom: 0px; left: 2px; z-index: 2; background-color: transparent; color: #000000; border: none; font-size: 16px; cursor: pointer;">&#x21BA;</button>\n'
@@ -382,9 +378,7 @@ function Pandoc(doc)
         echo = false,
         reload = false,
 
-        -- ToDo: How to handle mjs?
-
-        src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
+        src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.mjs',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js'
     }
