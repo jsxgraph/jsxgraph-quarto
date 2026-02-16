@@ -252,101 +252,95 @@ local function render_jsxgraph(globalOptions)
 
                 local html = ''
 
-                if options['render'] == 'div' then
+                -- Code for <iframe>.
 
-                    -- Code for <div>.
+                -- Create iframe content.
 
-                    -- ToDo: Handle width and height with %.
-                    -- ToDo: Content of jsxgraph.css only in style.
+                local icontent = '<!DOCTYPE html>\n'
+                icontent = icontent .. '<html lang="en">\n'
+                icontent = icontent .. '  <head>\n'
+                icontent = icontent .. '    <meta charset="UTF-8">\n'
+                icontent = icontent .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
+                icontent = icontent .. '    <script src="' .. options['src_jxg'] .. '"></script>\n'
+                icontent = icontent .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
+                icontent = icontent .. '    <style>\n'
+                icontent = icontent .. '      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }\n'
+                icontent = icontent .. '      .jxgbox { border: none; }\n'
+                icontent = icontent .. '    </style>\n'
+                icontent = icontent .. '  </head>\n'
+                icontent = icontent .. '  <body>\n'
+                icontent = icontent .. '    <div id="' .. id .. '" class="jxgbox" style="width: 100%; height: 100%; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
+                icontent = icontent .. '    <script>\n'
+                icontent = icontent .. jsxgraph .. '\n'
+                icontent = icontent .. '    </script>\n'
+                icontent = icontent .. '  </body>\n'
+                icontent = icontent .. '</html>\n'
 
-                    html = html .. '<div id="' .. id .. '" style="width: ' .. options['width'] .. 'px; height: ' .. options['height'] .. 'px; margin-bottom: 16px; position: relative; overflow: hidden; background-color: #fff; border-style: solid; border-width: 1px; border-color: #356aa0; border-radius: 10px; -webkit-border-radius: 10px; -ms-touch-action: none;' .. options['style'] .. '"></div>\n'
-                    html = html .. '<script type="module">\n'
+                -- Base64 of iframe content.
 
-                    -- ToDo: Insert src_jxg.
+                local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(icontent);
 
-                    html = html .. '    import JXG from "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.mjs";\n'
-                    html = html .. jsxgraph .. '\n'
+                -- Create iframe.
+
+                local iframe = '<iframe '
+                if options['iframe_id'] ~= nil then
+                    iframe = iframe .. ' id="' .. options['iframe_id'] .. '" '
+                end
+                iframe = iframe .. ' src="' .. jsx_b64 .. '" '
+                iframe = iframe .. ' sandbox="allow-scripts  allow-same-origin" '
+
+                -- Set width.
+
+                options['width'] = options['width']:match("^%s*(.-)%s*$")
+                if options['width']:match("^%d+$") then
+                    options['width'] = options['width'] .. "px"
+                end
+                options['height'] = options['height']:match("^%s*(.-)%s*$")
+                if options['height']:match("^%d+$") then
+                    options['height'] = options['height'] .. "px"
+                end
+
+                --iframe = iframe .. ' width="' .. options['width'] .. '"'
+                --iframe = iframe .. ' height="' .. options['height'] .. '"'
+                iframe = iframe .. ' class="' .. options['class'] .. '"'
+                iframe = iframe .. ' style="width:' .. options['width'] .. '; height:' .. options['height'] .. ';position: relative; margin:0; padding:0; display: block; z-index: 1; ' .. options['style'] .. ';"'
+                iframe = iframe .. ' name="iframe' .. id .. '"'
+                iframe = iframe .. '></iframe>\n'
+
+                -- Set reload option.
+
+                if is_nonempty_string(options.reload) then
+                    options.reload = options.reload == "true"
+                end
+
+                -- Add iframe.
+
+                if options.reload then
+
+                    -- Fix div vs iframe margin differences.
+
+                    -- ToDo: Different behaviour in revealjs.
+
+                    local margin_b = 10;
+                    if options.echo then
+                        margin_b = -8
+                    end
+
+                    -- Add reload button.
+
+                    -- ToDo: Button only with px?
+
+                    html = '<div style="border: none; margin-bottom: ' .. margin_b .. 'px; position: relative; display: inline-block;\n">'
+                    html = html .. '<button  id="button' .. id .. '" style="position: absolute; bottom: 0px; left: 2px; z-index: 2; background-color: transparent; color: #000000; border: none; font-size: 16px; cursor: pointer;">&#x21BA;</button>\n'
+                    html = html .. iframe .. '\n'
+                    html = html .. '</div>\n'
+                    html = html .. '<script>\n'
+                    html = html .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
+                    html = html .. '    const iframe' .. id .. ' = document.getElementsByName("iframe' .. id .. '")[0]\n'
+                    html = html .. '    btn' .. id .. '.addEventListener("click", () => { iframe' .. id .. '.src = iframe' .. id .. '.src; });\n'--contentWindow.location.reload();
                     html = html .. '</script>\n'
                 else
-
-                    -- Code for <iframe>.
-
-                    -- Create iframe content.
-
-                    local icontent = '<!DOCTYPE html>\n'
-                    icontent = icontent .. '<html lang="en">\n'
-                    icontent = icontent .. '  <head>\n'
-                    icontent = icontent .. '    <meta charset="UTF-8">\n'
-                    icontent = icontent .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
-                    icontent = icontent .. '    <script src="' .. options['src_jxg'] .. '"></script>\n'
-                    icontent = icontent .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
-                    icontent = icontent .. '    <style>\n'
-                    icontent = icontent .. '      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }\n'
-                    icontent = icontent .. '      .jxgbox { border: none; }\n'
-                    icontent = icontent .. '    </style>\n'
-                    icontent = icontent .. '  </head>\n'
-                    icontent = icontent .. '  <body>\n'
-                    icontent = icontent .. '    <div id="' .. id .. '" class="jxgbox" style="width: 100%; height: 100%; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
-                    icontent = icontent .. '    <script>\n'
-                    icontent = icontent .. jsxgraph .. '\n'
-                    icontent = icontent .. '    </script>\n'
-                    icontent = icontent .. '  </body>\n'
-                    icontent = icontent .. '</html>\n'
-
-                    -- Base64 of iframe content.
-
-                    local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(icontent);
-
-                    -- Create iframe.
-
-                    local iframe = '<iframe '
-                    if options['iframe_id'] ~= nil then
-                        iframe = iframe .. ' id="' .. options['iframe_id'] .. '" '
-                    end
-                    iframe = iframe .. ' src="' .. jsx_b64 .. '" '
-                    iframe = iframe .. ' sandbox="allow-scripts  allow-same-origin" '
-                    iframe = iframe .. ' width="' .. options['width'] .. '"'
-                    iframe = iframe .. ' height="' .. options['height'] .. '"'
-                    iframe = iframe .. ' class="' .. options['class'] .. '"'
-                    iframe = iframe .. ' style="position: relative; margin:0; padding:0; display: block; z-index: 1; ' .. options['style'] .. ';"'
-                    iframe = iframe .. ' name="iframe' .. id .. '"'
-                    iframe = iframe .. '></iframe>\n'
-
-                    -- Set reload option.
-
-                    if is_nonempty_string(options.reload) then
-                        options.reload = options.reload == "true"
-                    end
-
-                    -- Add iframe.
-
-                    if options.reload then
-
-                        -- Fix div vs iframe margin differences.
-
-                        -- ToDo: Different behaviour in revealjs.
-
-                        local margin_b = 10;
-                        if options.echo then
-                            margin_b = -8
-                        end
-
-                        -- Add reload button.
-
-                        -- ToDo: Button only with px?
-
-                        html = '<div style="border: none; margin-bottom: ' .. margin_b .. 'px; position: relative; display: inline-block;\n">'
-                        html = html .. '<button  id="button' .. id .. '" style="position: absolute; bottom: 0px; left: 2px; z-index: 2; background-color: transparent; color: #000000; border: none; font-size: 16px; cursor: pointer;">&#x21BA;</button>\n'
-                        html = html .. iframe .. '\n'
-                        html = html .. '</div>\n'
-                        html = html .. '<script>\n'
-                        html = html .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
-                        html = html .. '    const iframe' .. id .. ' = document.getElementsByName("iframe' .. id .. '")[0]\n'
-                        html = html .. '    btn' .. id .. '.addEventListener("click", () => { iframe' .. id .. '.src = iframe' .. id .. '.src; });\n'--contentWindow.location.reload();
-                        html = html .. '</script>\n'
-                    else
-                        html = iframe
-                    end
+                    html = iframe
                 end
 
                 -- Create pandoc.RawBlock.
@@ -365,16 +359,9 @@ local function render_jsxgraph(globalOptions)
         end
     end
 
-    local DecoratedCodeBlock = function(node)
-        quarto.log.output('>>> execute DecoratedCodeBlock')
-        return CodeBlock(node.code_block)
-    end
-
     return {
-        CodeBlock = CodeBlock,
-        DecoratedCodeBlock = DecoratedCodeBlock
+        CodeBlock = CodeBlock
     }
-
 end
 
 function Pandoc(doc)
