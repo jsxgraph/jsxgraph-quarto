@@ -269,7 +269,7 @@ local function render_jsxgraph(globalOptions)
 
                 if options['src_jxg'] == '' then
                     local jsxgraph_local = io.open(pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}), "r")
-                    options['src_jxg'] = 'data:text/html;base64,' .. quarto.base64.encode(jsxgraph_local:read("*a"));
+                    options['src_jxg'] = 'data:text/javascript;base64,' .. quarto.base64.encode(jsxgraph_local:read("*a"));
                     jsxgraph_local:close()
                 end
 
@@ -279,15 +279,13 @@ local function render_jsxgraph(globalOptions)
 
                 if options['src_css'] ~= '' then
                     local css_local = io.open(pandoc.path.join({extension_dir, "resources", "css", "jsxgraph.css"}), "r")
-                    options['src_css'] = 'data:text/html;base64,' .. quarto.base64.encode(css_local:read("*a"));
+                    options['src_css'] = 'data:text/css;base64,' .. quarto.base64.encode(css_local:read("*a"));
                     css_local:close()
                 end
 
-                icontent = icontent .. '    <script>\n'
-                icontent = icontent .. '        const style = document.createElement("style");\n'
-                icontent = icontent .. '        style.textContent = atob("' .. options['src_css'] .. '");\n'
-                icontent = icontent .. '        document.head.appendChild(style);\n'
-                icontent = icontent .. '    </script>\n'
+                icontent = icontent .. '    <style>\n'
+                icontent = icontent .. '        @import url("' .. options['src_css'] .. '");\n'
+                icontent = icontent .. '    </style>\n'
 
                 --icontent = icontent .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
 
