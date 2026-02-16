@@ -154,7 +154,7 @@ local function render_jsxgraph(globalOptions)
 
                 -- Content mjs file after JSXGraph code.
 
-                -- ToDo: Adopt svg style option in code_after_board.ms.
+                -- ToDo: Adopt svg style option in code_after_board.mjs.
 
                 local resource_after = pandoc.path.join({extension_dir, "resources", "mjs", "code_after_board.mjs"})
 
@@ -260,9 +260,37 @@ local function render_jsxgraph(globalOptions)
                 icontent = icontent .. '<html lang="en">\n'
                 icontent = icontent .. '  <head>\n'
                 icontent = icontent .. '    <meta charset="UTF-8">\n'
+
+                -- Include MathJax.
+
                 icontent = icontent .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
+
+                -- Include local JSXGraph.
+
+                if options['src_jxg'] == '' then
+                    local jsxgraph_local = io.open(pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}), "r")
+                    options['src_jxg'] = 'data:text/html;base64,' .. quarto.base64.encode(jsxgraph_local:read("*a"));
+                    jsxgraph_local:close()
+                end
+
                 icontent = icontent .. '    <script src="' .. options['src_jxg'] .. '"></script>\n'
-                icontent = icontent .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
+
+                -- Include local css.
+
+                if options['src_css'] ~= '' then
+                    local css_local = io.open(pandoc.path.join({extension_dir, "resources", "css", "jsxgraph.css"}), "r")
+                    options['src_css'] = 'data:text/html;base64,' .. quarto.base64.encode(css_local:read("*a"));
+                    css_local:close()
+                end
+
+                icontent = icontent .. '    <script>\n'
+                icontent = icontent .. '        const style = document.createElement("style");\n'
+                icontent = icontent .. '        style.textContent = atob("' .. options['src_css'] .. '");\n'
+                icontent = icontent .. '        document.head.appendChild(style);\n'
+                icontent = icontent .. '    </script>\n'
+
+                --icontent = icontent .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
+
                 icontent = icontent .. '    <style>\n'
                 icontent = icontent .. '      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }\n'
                 icontent = icontent .. '      .jxgbox { border: none; }\n'
@@ -377,7 +405,7 @@ function Pandoc(doc)
         class = '',
         echo = false,
         reload = false,
-        src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.mjs',
+        src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js'
     }
