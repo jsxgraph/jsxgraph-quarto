@@ -146,7 +146,7 @@ local function render_jsxgraph(globalOptions)
 
                 -- Content mjs file before JSXGraph code.
 
-                local resource_before = pandoc.path.join({extension_dir, "resources", "mjs", "code_before_board.mjs"})
+                local resource_before = pandoc.path.join({extension_dir, "resources", "mjs", "code_before_board_" .. options['dom'] .. ".mjs"})
 
                 local file_before = io.open(resource_before, "r")
                 local content_before = file_before:read("*a")
@@ -263,7 +263,7 @@ local function render_jsxgraph(globalOptions)
 
                 -- Include MathJax.
 
--- ToDo: Include local MathJax.
+                -- ToDo: Include local MathJax.
 
                 icontent = icontent .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
 
@@ -401,6 +401,7 @@ function Pandoc(doc)
         width = '500',
         height = '500',
         render = 'iframe',
+        dom = 'chrome',
         style = 'border: 1px solid black; border-radius: 10px;',
         class = '',
         echo = false,
