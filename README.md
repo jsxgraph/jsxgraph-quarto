@@ -38,15 +38,28 @@ quarto add jsxgraph/jsxgraph-quarto
 
 ### 1b. Prerequisites for SVG Export
 
-To export JSXGraph boards as SVG (for PDF or Word outputs), you need:
+### 1b. Prerequisites for SVG Export
 
-1. Install [Node.js](https://nodejs.org/) if not already installed.
-2. Install `jsdom` and `jsxgraph` via npm:
+To export JSXGraph boards as SVG (for HTML, PDF, or Word outputs), the following prerequisites and setup steps are required:
 
-```bash
-npm install jsdom
-npm install jsxgraph
-```
+---
+
+#### 1. Install Node.js
+
+Make sure [Node.js](https://nodejs.org/) is installed on your system. This is required to run the npm packages needed for SVG export.
+
+---
+
+#### 2. DOM Generator Options for SVG Export
+
+JSXGraph Extention supports different DOM generators to render SVGs. You can choose from `chrome`, `jsdom`, or `playwright`. The table below shows the required npm packages and setup for each option:
+
+| Generator    | npm / Setup Steps                                                                                                                             | Notes                                                                                                |
+|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| `chrome`    | No npm packages needed.<br>Requires local Chrome installation.                                                                                | Download Chrome from [Google Chrome](https://www.google.com/chrome/). Uses real browser environment. |
+| `jsdom`     | Install via npm: <br>```bash npm install jsdom ```                                                                                            | Works out-of-the-box, but SVG support is limited.                                                    |
+| `playwright`| Install via npm: <br>```bash npm install playwright ``` <br>Then install Chrome for Playwright: <br>```bash npx playwright install chrome ``` | Provides a controlled browser environment.                                                           |
+
 
 **Note**
 
@@ -79,19 +92,20 @@ filters:
 
 ## Attributes
 
-| Attribute   | Description                                                                              | Default  |
-|-------------|------------------------------------------------------------------------------------------|----------|
-| `iframe_id` | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.             | —        |
-| `width`     | Width in pixels (e.g. `500`) or percent (e.g. `50%`). For other CSS units, use `style`.  | `500`    |
+| Attribute   | Description                                                                             | Default  |
+|-------------|-----------------------------------------------------------------------------------------|----------|
+| `iframe_id` | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.            | —        |
+| `width`     | Width in pixels (e.g. `500`) or percent (e.g. `50%`). For other CSS units, use `style`. | `500`    |
 | `height`    | Height in pixels (e.g. `500`) or percent (e.g. `50%`). For other CSS units, use `style`. | `500`    |
-| `style`     | Custom CSS (e.g. `border: 5px solid red; border-radius: 10px;`).                         | `none`   |
-| `class`     | Adds a CSS class to the `<iframe>`.                                                      | `none`   |
-| `echo`      | Displays the JSXGraph source code.                                                       | `false`  |
-| `src_jxg`   | Path to `jsxgraphcore.js`.                                                               | —        |
-| `src_css`   | Path to `jsxgraph.css`.                                                                  | —        |
-| `src_mjx`   | Path to the MathJax file.                                                                | —        |
-| `render`    | Static export with `svg`; interactive html export with `iframe` (recommended) or `div`.  | `iframe` |
-| `reload`    | Shows a reload button when `render="iframe"`.                                            | `false`  |
+| `style`     | Custom CSS (e.g. `border: 5px solid red; border-radius: 10px;`).                        | `none`   |
+| `class`     | Adds a CSS class to the `<iframe>`.                                                     | `none`   |
+| `echo`      | Displays the JSXGraph source code.                                                      | `false`  |
+| `src_jxg`   | Path to `jsxgraphcore.js`.                                                              | —        |
+| `src_css`   | Path to `jsxgraph.css`.                                                                 | —        |
+| `src_mjx`   | Path to the MathJax file.                                                               | —        |
+| `render`    | Static export with `svg`; interactive html export with `iframe` (recommended) or `div`. | `iframe` |
+| `dom`       | DOM generator for `svg`: `chrome`, `jsdom` of `playwright`.                              | `chrome` |
+| `reload`    | Shows a reload button when `render="iframe"`.                                           | `false`  |
 
 ---
 
