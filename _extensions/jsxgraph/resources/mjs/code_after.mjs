@@ -1,4 +1,3 @@
-
 const borderWidth = 1;
 const borderRadius = 12;
 const padding = 0;

@@ -45,6 +45,21 @@ function is_nonempty_string(x)
     return x ~= nil and type(x) == "string"
 end
 
+-- Read file.
+function ioRead(file)
+    local ioFile = io.open(file, "r")
+    local ioContent = ioFile:read("*a")
+    ioFile:close()
+    return ioContent
+end
+
+-- Write file.
+function ioWrite(file, content)
+    local ioFile = io.open(file, "w")
+    ioFile:write(content)
+    ioFile:close()
+end
+
 local function render_jsxgraph(globalOptions)
 
     function CodeBlock(content)
@@ -142,26 +157,6 @@ local function render_jsxgraph(globalOptions)
 
                 jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("jxg_box",')
 
-                -- Create mjs file for nodejs.
-
-                -- Content mjs file before JSXGraph code.
-
-                local resource_before = pandoc.path.join({extension_dir, "resources", "mjs", options['dom'] .. "_before.mjs"})
-
-                local file_before = io.open(resource_before, "r")
-                local content_before = file_before:read("*a")
-                file_before:close()
-
-                -- Content mjs file after JSXGraph code.
-
-                -- ToDo: Adopt svg style option in code_after_board.mjs.
-
-                local resource_after = pandoc.path.join({extension_dir, "resources", "mjs", options['dom'] .. "_after.mjs"})
-
-                local file_after = io.open(resource_after, "r")
-                local content_after = file_after:read("*a")
-                file_after:close()
-
                 -- Create hidden directory.
 
                 local function ensure_hidden_dir(path)
@@ -196,16 +191,14 @@ local function render_jsxgraph(globalOptions)
                 local file_node_path = join_path(temp_dir, prefix .. "code_node_board.mjs")
                 local file_svg_path = join_path(temp_dir, prefix .. "board.svg")
 
-                -- Merge content.
+                -- Create mjs file for nodejs.
 
+                local content_before = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", options['dom'] .. "_before.mjs"}))
+                local content_after = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", options['dom'] .. "_after.mjs"}))
+                local code_after = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "code_after.mjs"}))
                 local content_node = content_before .. jsxgraph .. content_after .. [[
                 ]]
-
-                -- Create mjs file.
-
-                local file_node = io.open(file_node_path, "w")
-                file_node:write(content_node)
-                file_node:close()
+                ioWrite(file_node_path, content_node)
 
                 -- Create nodejs command.
 
@@ -227,8 +220,7 @@ local function render_jsxgraph(globalOptions)
 
                 -- Create svg file.
 
-                local svg_file = io.open(file_svg_path, "r")
-                svg_file:close()
+                local svg_file = ioRead(file_svg_path)
 
                 -- Create pandoc.Image.
 
@@ -273,9 +265,8 @@ local function render_jsxgraph(globalOptions)
                 -- Include local JSXGraph.
 
                 if options['src_jxg'] == '' then
-                    local jsxgraph_local = io.open(pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}), "r")
-                    options['src_jxg'] = 'data:text/javascript;base64,' .. quarto.base64.encode(jsxgraph_local:read("*a"));
-                    jsxgraph_local:close()
+                    local jsxgraph_local = ioRead(pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}))
+                    options['src_jxg'] = 'data:text/javascript;base64,' .. quarto.base64.encode(jsxgraph_local);
                 end
 
                 icontent = icontent .. '    <script src="' .. options['src_jxg'] .. '"></script>\n'
@@ -283,9 +274,8 @@ local function render_jsxgraph(globalOptions)
                 -- Include local css.
 
                 if options['src_css'] ~= '' then
-                    local css_local = io.open(pandoc.path.join({extension_dir, "resources", "css", "jsxgraph.css"}), "r")
-                    options['src_css'] = 'data:text/css;base64,' .. quarto.base64.encode(css_local:read("*a"));
-                    css_local:close()
+                    local css_local = ioRead(pandoc.path.join({extension_dir, "resources", "css", "jsxgraph.css"}))
+                    options['src_css'] = 'data:text/css;base64,' .. quarto.base64.encode(css_local);
                 end
 
                 icontent = icontent .. '    <style>\n'
