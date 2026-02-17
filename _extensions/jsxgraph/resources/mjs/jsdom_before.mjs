@@ -59,5 +59,5 @@ global.ResizeObserver = class ResizeObserver {
     unobserve() {}
 };
 
-const JXG = await import('jsxgraph');
+const JXG = await import('../_extensions/jsxgraph/resources/mjs/jsxgraphcore.mjs');
 JXG.Options.text.display = 'inline';
