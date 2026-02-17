@@ -38,8 +38,6 @@ quarto add jsxgraph/jsxgraph-quarto
 
 ### 1b. Prerequisites for SVG Export
 
-### 1b. Prerequisites for SVG Export
-
 To export JSXGraph boards as SVG (for HTML, PDF, or Word outputs), the following prerequisites and setup steps are required:
 
 ---
@@ -54,11 +52,11 @@ Make sure [Node.js](https://nodejs.org/) is installed on your system. This is re
 
 JSXGraph Extention supports different DOM generators to render SVGs. You can choose from `chrome`, `jsdom`, or `playwright`. The table below shows the required npm packages and setup for each option:
 
-| Generator    | npm / Setup Steps                                                                                                                             | Notes                                                                                                |
-|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| `chrome`    | No npm packages needed.<br>Requires local Chrome installation.                                                                                | Download Chrome from [Google Chrome](https://www.google.com/chrome/). Uses real browser environment. |
-| `jsdom`     | Install via npm: <br>```bash npm install jsdom ```                                                                                            | Works out-of-the-box, but SVG support is limited.                                                    |
-| `playwright`| Install via npm: <br>```bash npm install playwright ``` <br>Then install Chrome for Playwright: <br>```bash npx playwright install chrome ``` | Provides a controlled browser environment.                                                           |
+| Generator    | npm / Setup Steps                                                                                                                            | Notes                                                                                                   |
+|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
+| `chrome`    | Install via npm: <br>```bash npm install puppeteer ```<br>Requires local Chrome installation.                                                 | Download Chrome from [Google Chrome](https://www.google.com/chrome/). Uses real browser environment.                               |
+| `jsdom`     | Install via npm: <br>```bash npm install jsdom ```                                                                                            | Works out-of-the-box, but SVG support is limited.                                                       |
+| `playwright`| Install via npm: <br>```bash npm install playwright ``` <br>Then install Chrome for Playwright: <br>```bash npx playwright install chrome ``` | Provides a controlled browser environment.                                                              |
 
 
 **Note**
