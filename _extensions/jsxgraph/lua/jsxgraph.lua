@@ -195,8 +195,8 @@ local function render_jsxgraph(globalOptions)
 
                 local content_before = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", options['dom'] .. "_before.mjs"}))
                 local content_after = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", options['dom'] .. "_after.mjs"}))
-                local code_after = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "code_after.mjs"}))
-                local content_node = content_before .. jsxgraph .. content_after .. [[
+                local create_svg = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "create_svg.mjs"}))
+                local content_node = content_before .. jsxgraph .. content_after .. create_svg .. [[
                 ]]
                 ioWrite(file_node_path, content_node)
 
