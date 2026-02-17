@@ -146,7 +146,7 @@ local function render_jsxgraph(globalOptions)
 
                 -- Content mjs file before JSXGraph code.
 
-                local resource_before = pandoc.path.join({extension_dir, "resources", "mjs", "code_before_board_" .. options['dom'] .. ".mjs"})
+                local resource_before = pandoc.path.join({extension_dir, "resources", "mjs", options['dom'] .. "_before.mjs"})
 
                 local file_before = io.open(resource_before, "r")
                 local content_before = file_before:read("*a")
@@ -156,7 +156,7 @@ local function render_jsxgraph(globalOptions)
 
                 -- ToDo: Adopt svg style option in code_after_board.mjs.
 
-                local resource_after = pandoc.path.join({extension_dir, "resources", "mjs", "code_after_board.mjs"})
+                local resource_after = pandoc.path.join({extension_dir, "resources", "mjs", options['dom'] .. "_after.mjs"})
 
                 local file_after = io.open(resource_after, "r")
                 local content_after = file_after:read("*a")
@@ -209,11 +209,14 @@ local function render_jsxgraph(globalOptions)
 
                 -- Create nodejs command.
 
-                local node_cmd = string.format(
-                        "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q",
-                        options['width'],
-                        options['height'],
-                        options['style']
+                local node_cmd = ''
+
+                node_cmd = string.format(
+                    "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q",
+                    options['width'],
+                    options['height'],
+                    options['style'],
+                    options['src_jxg']
                 )
 
                 -- Execute nodejs command.
