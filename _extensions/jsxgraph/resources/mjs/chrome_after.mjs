@@ -4,7 +4,7 @@ const svgElement = await page.$eval("#jxg_box svg", el => el.outerHTML);
 
 const borderWidth = 1;
 const borderRadius = 12;
-const padding = 0;
+const padding = 10;
 const backgroundColor = '#ff0';
 const newWidth = width + 2*borderWidth + 2*padding;
 const newHeight = height + 2*borderWidth + 2*padding;

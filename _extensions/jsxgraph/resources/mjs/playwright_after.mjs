@@ -1,18 +1,11 @@
+});
 
-
-const boxDiv = dom.window.document.getElementById('jxg_box');
-//const svgElement = boxDiv.querySelector('svg');
-
-const serializer = new dom.window.XMLSerializer();
-
-const svgElement = serializer.serializeToString(boxDiv.querySelector('svg'));
-
-
+const svgElement = await page.$eval("#jxg_box svg", el => el.outerHTML);
 
 const borderWidth = 1;
 const borderRadius = 12;
 const padding = 0;
-const backgroundColor = '#0f0';
+const backgroundColor = '#f0f';
 const newWidth = width + 2*borderWidth + 2*padding;
 const newHeight = height + 2*borderWidth + 2*padding;
 
@@ -75,3 +68,10 @@ const svgWithBorder = `<svg
 </svg>`;
 
 fs.writeFileSync(svgFilename, `<?xml version="1.0" encoding="UTF-8"?>\n${svgWithBorder}`);
+
+console.log(`SVG erfolgreich erstellt: ${svgFilename}`);
+
+await browser.close();
+}
+
+main().catch(console.error);

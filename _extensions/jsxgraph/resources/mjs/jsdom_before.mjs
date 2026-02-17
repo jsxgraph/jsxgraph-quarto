@@ -3,13 +3,13 @@ import fs from 'fs';
 
 const svgFilename = process.argv[2] || 'board.svg';
 const args = process.argv.slice(2);
-const filename = args[0];
 const options = {};
-
 for (let i = 1; i < args.length; i++) {
     const [key, value] = args[i].split("=");
-    if (key && value) {
-        options[key] = value;
+    //if (key && value) options[key] = value;
+    if (key && value !== undefined) {
+        const numValue = Number(value);
+        options[key] = isNaN(numValue) ? value : numValue;
     }
 }
 
