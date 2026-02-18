@@ -1,19 +1,19 @@
-    });
+    }, uuid);
 
-    const dataURI = await page.evaluate(() => {
+    const dataURI = await page.evaluate((uuid) => {
         const board = Object.values(JXG.boards)
-            .find(b => b.container === "jxg_box");
+            .find(b => b.container === uuid);
         if (!board) return null;
 
         return board.renderer.dumpToDataURI(false); // SVG Data-URI
-    });
+    }, uuid);
 
     createSvg({
         dataURI: dataURI,
         width: width,
         height: height,
         svgFilename: svgFilename,
-        backgroundColor: '#afa'
+        backgroundColor: (dom == 'chrome') ? '#afa' : '#faa'
     });
     //*/
     await browser.close();

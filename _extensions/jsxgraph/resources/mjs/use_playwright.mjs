@@ -17,6 +17,8 @@ const width = options.width || 800;
 const height = options.height || 600;
 const style = options.style || "";
 const src_jxg = options.src_jxg || "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js";
+const dom = options.dom || 'chrome';
+const uuid = options.uuid || 'jxg_box';
 
 async function main() {
     const browser = await chromium.launch({ headless: true });
@@ -31,11 +33,11 @@ async function main() {
 <head>
 <style>
 body { margin:0; }
-#jxg_box { width:${width}px; height:${height}px; ${style} }
+#${uuid} { width:${width}px; height:${height}px; ${style} }
 </style>
 </head>
 <body>
-<div id="jxg_box"></div>
+<div id="${uuid}"></div>
 </body>
 </html>
     `);
@@ -44,4 +46,4 @@ body { margin:0; }
     await page.addScriptTag({ url: src_jxg });
 
     // Board erstellen
-    await page.evaluate(() => {
+    await page.evaluate((uuid) => {

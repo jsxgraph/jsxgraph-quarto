@@ -133,6 +133,10 @@ local function render_jsxgraph(globalOptions)
 
             jsxgraph = jsxgraph:gsub("initBoard%(%s*BOARDID%s*,", 'initBoard("jxg_box",')
 
+            -- Replace id by uuid.
+
+            jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("' .. id .. '",')
+
             -- Default value 'render'.
 
             local render = 'svg'
@@ -155,11 +159,27 @@ local function render_jsxgraph(globalOptions)
 
                 -- Replace id by 'jxg_box'.
 
-                jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("jxg_box",')
+                --jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("jxg_box",')
+
+                -- Tests if directors exists.
+
+                local function dir_exists(path)
+                    local ok, err, code = os.rename(path, path)
+                    if ok then
+                        return true
+                    else
+                        -- code 13 = Permission denied.
+                        -- code 2 = No such file or directory.
+                        return code == 13
+                    end
+                end
 
                 -- Create hidden directory.
 
                 local function ensure_hidden_dir(path)
+                    if dir_exists(path) then
+                        return -- Verzeichnis existiert bereits
+                    end
                     if package.config:sub(1,1) == "\\" then
                         -- Windows.
                         os.execute('mkdir "' .. path .. '"')
@@ -177,6 +197,14 @@ local function render_jsxgraph(globalOptions)
                     return table.concat({...}, SEP)
                 end
 
+                -- Remove file if exists.
+
+                local function remove_file(path)
+                    if dir_exists(path) then
+                        local success, err = os.remove(path)
+                    end
+                end
+
                 -- Hidden directory for mjs and svg files.
 
                 local temp_dir = ".temp_jsxgraph"
@@ -186,16 +214,18 @@ local function render_jsxgraph(globalOptions)
 
                 local prefix = "file_" .. svg_counter .. "_"
 
-                -- Set file paths.
+                -- Set file paths and remove files if exit.
 
                 local file_node_path = join_path(temp_dir, prefix .. "code_node_board.mjs")
+                remove_file(file_node_path)
                 local file_svg_path = join_path(temp_dir, prefix .. "board.svg")
+                remove_file(file_svg_path)
 
                 -- Create mjs file for nodejs.
 
-                local import_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "import_" .. options['dom'] .. ".mjs"}))
-                local post_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "post.mjs"}))
-                local content_node = import_file .. jsxgraph .. post_file .. [[
+                local use_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "use_" .. options['dom'] .. ".mjs"}))
+                local svg_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "svg.mjs"}))
+                local content_node = use_file .. jsxgraph .. svg_file .. [[
                 ]]
                 ioWrite(file_node_path, content_node)
 
@@ -204,11 +234,13 @@ local function render_jsxgraph(globalOptions)
                 local node_cmd = ''
 
                 node_cmd = string.format(
-                    "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q",
+                    "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q dom=%q uuid=%q",
                     options['width'],
                     options['height'],
                     options['style'],
-                    options['src_jxg']
+                    options['src_jxg'],
+                    options['dom'],
+                    id -- uuid
                 )
 
                 -- Execute nodejs command.
@@ -237,10 +269,6 @@ local function render_jsxgraph(globalOptions)
             else
 
                 -- Export html.
-
-                -- Replace id by uuid.
-
-                jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("' .. id .. '",')
 
                 -- Code for <div> and <iframe>.
 
