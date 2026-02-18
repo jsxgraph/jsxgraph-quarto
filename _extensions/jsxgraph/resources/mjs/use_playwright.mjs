@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-
+import path from 'path';
 import fs from "fs";
 
 const svgFilename = process.argv[2] || 'board.svg';
@@ -42,8 +42,11 @@ body { margin:0; }
 </html>
     `);
 
-    // JSXGraph laden
-    await page.addScriptTag({ url: src_jxg });
 
-    // Board erstellen
+    if (fs.existsSync(src_jxg)) {
+        await page.addScriptTag({ path: path.resolve(src_jxg) });
+    } else if (src_jxg.startsWith('http://') || src_jxg.startsWith('https://') || src_jxg.startsWith('file://')) {
+        await page.addScriptTag({url: src_jxg});
+    }
+
     await page.evaluate((uuid) => {
