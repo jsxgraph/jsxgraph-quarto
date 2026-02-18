@@ -223,6 +223,11 @@ local function render_jsxgraph(globalOptions)
 
                 -- Create mjs file for nodejs.
 
+
+                --if options['src_jxg'] == '' then
+                --    options['src_jxg'] = pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"})
+                --end
+
                 local use_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "use_" .. options['dom'] .. ".mjs"}))
                 local svg_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "svg.mjs"}))
                 local content_node = use_file .. jsxgraph .. svg_file .. [[
@@ -278,6 +283,44 @@ local function render_jsxgraph(globalOptions)
 
                 -- Create iframe content.
 
+                if options['src_jxg'] == '' then
+                    local jsxgraph_local = ioRead(pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}))
+                    options['src_jxg'] = 'data:text/javascript;base64,' .. quarto.base64.encode(jsxgraph_local)
+                end
+
+                if options['src_css'] ~= '' then
+                    local css_local = ioRead(pandoc.path.join({extension_dir, "resources", "css", "jsxgraph.css"}))
+                    options['src_css'] = 'data:text/css;base64,' .. quarto.base64.encode(css_local)
+                end
+
+                local icontent = string.format([[
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <!-- Include MathJax -->
+    <script id="MathJax-script" async src="%s"></script>
+    <!-- Include JSXGraph -->
+    <script src="%s"></script>
+    <!-- Include CSS -->
+    <style>
+        @import url("%s");
+    </style>
+    <style>
+      html, body { margin: 0; padding: 0; width: 100%%; height: 100%%; }
+      .jxgbox { border: none; }
+    </style>
+  </head>
+  <body>
+    <div id="%s" class="jxgbox" style="width: 100%%; height: 100%%; display: block; object-fit: fill; box-sizing: border-box;"></div>
+    <script>
+%s
+    </script>
+  </body>
+</html>
+]], options['src_mjx'], options['src_jxg'], options['src_css'], id, jsxgraph)
+
+                --[[
                 local icontent = '<!DOCTYPE html>\n'
                 icontent = icontent .. '<html lang="en">\n'
                 icontent = icontent .. '  <head>\n'
@@ -323,6 +366,8 @@ local function render_jsxgraph(globalOptions)
                 icontent = icontent .. '    </script>\n'
                 icontent = icontent .. '  </body>\n'
                 icontent = icontent .. '</html>\n'
+
+                ]]
 
                 -- Base64 of iframe content.
 
@@ -426,7 +471,7 @@ function Pandoc(doc)
         class = '',
         echo = false,
         reload = false,
-        src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
+        src_jxg = pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}), --'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js'
     }
