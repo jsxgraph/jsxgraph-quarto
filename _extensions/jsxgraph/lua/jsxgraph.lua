@@ -17,7 +17,7 @@ local extension_dir = pandoc.path.directory(lua_dir)
 
 -- Helper function to copy a table.
 
-function copyTable(obj, seen)
+local function copyTable(obj, seen)
 
     -- Handle non-tables and previously-seen tables.
 
@@ -41,12 +41,12 @@ end
 
 -- Helper for non empty string.
 
-function is_nonempty_string(x)
+local function is_nonempty_string(x)
     return x ~= nil and type(x) == "string"
 end
 
 -- Read file.
-function ioRead(file)
+local function ioRead(file)
     local ioFile = io.open(file, "r")
     local ioContent = ioFile:read("*a")
     ioFile:close()
@@ -54,11 +54,54 @@ function ioRead(file)
 end
 
 -- Write file.
-function ioWrite(file, content)
+local function ioWrite(file, content)
     local ioFile = io.open(file, "w")
     ioFile:write(content)
     ioFile:close()
 end
+
+local function dir_exists(path)
+    local ok, err, code = os.rename(path, path)
+    if ok then
+        return true
+    else
+        -- code 13 = Permission denied.
+        -- code 2 = No such file or directory.
+        return code == 13
+    end
+end
+
+-- Create hidden directory.
+
+local function ensure_hidden_dir(path)
+    if dir_exists(path) then
+        return -- Verzeichnis existiert bereits
+    end
+    if package.config:sub(1,1) == "\\" then
+        -- Windows.
+        os.execute('mkdir "' .. path .. '"')
+        os.execute('attrib +h "' .. path .. '"')
+    else
+        -- macOS / Linux.
+        os.execute('mkdir -p "' .. path .. '"')
+    end
+end
+
+-- Set directory path.
+
+local function join_path(...)
+    local SEP = package.config:sub(1,1)  -- "\\" Windows, "/" Unix
+    return table.concat({...}, SEP)
+end
+
+-- Remove file if exists.
+
+local function remove_file(path)
+    if dir_exists(path) then
+        local success, err = os.remove(path)
+    end
+end
+
 
 local function render_jsxgraph(globalOptions)
 
@@ -157,53 +200,8 @@ local function render_jsxgraph(globalOptions)
 
                 -- Export svg.
 
-                -- Replace id by 'jxg_box'.
-
-                --jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("jxg_box",')
-
                 -- Tests if directors exists.
 
-                local function dir_exists(path)
-                    local ok, err, code = os.rename(path, path)
-                    if ok then
-                        return true
-                    else
-                        -- code 13 = Permission denied.
-                        -- code 2 = No such file or directory.
-                        return code == 13
-                    end
-                end
-
-                -- Create hidden directory.
-
-                local function ensure_hidden_dir(path)
-                    if dir_exists(path) then
-                        return -- Verzeichnis existiert bereits
-                    end
-                    if package.config:sub(1,1) == "\\" then
-                        -- Windows.
-                        os.execute('mkdir "' .. path .. '"')
-                        os.execute('attrib +h "' .. path .. '"')
-                    else
-                        -- macOS / Linux.
-                        os.execute('mkdir -p "' .. path .. '"')
-                    end
-                end
-
-                -- Set directory path.
-
-                local function join_path(...)
-                    local SEP = package.config:sub(1,1)  -- "\\" Windows, "/" Unix
-                    return table.concat({...}, SEP)
-                end
-
-                -- Remove file if exists.
-
-                local function remove_file(path)
-                    if dir_exists(path) then
-                        local success, err = os.remove(path)
-                    end
-                end
 
                 -- Hidden directory for mjs and svg files.
 
@@ -322,55 +320,6 @@ local function render_jsxgraph(globalOptions)
 </html>
 ]], options['src_mjx'], options['src_jxg'], options['src_css'], id, options['style'], jsxgraph)
 
-                --[[
-                local icontent = '<!DOCTYPE html>\n'
-                icontent = icontent .. '<html lang="en">\n'
-                icontent = icontent .. '  <head>\n'
-                icontent = icontent .. '    <meta charset="UTF-8">\n'
-
-                -- Include MathJax.
-
-                -- ToDo: Include local MathJax.
-
-                icontent = icontent .. '    <script id="MathJax-script" async src="' .. options['src_mjx'] .. '"></script>'
-
-                -- Include local JSXGraph.
-
-                if options['src_jxg'] == '' then
-                    local jsxgraph_local = ioRead(pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}))
-                    options['src_jxg'] = 'data:text/javascript;base64,' .. quarto.base64.encode(jsxgraph_local);
-                end
-
-                icontent = icontent .. '    <script src="' .. options['src_jxg'] .. '"></script>\n'
-
-                -- Include local css.
-
-                if options['src_css'] ~= '' then
-                    local css_local = ioRead(pandoc.path.join({extension_dir, "resources", "css", "jsxgraph.css"}))
-                    options['src_css'] = 'data:text/css;base64,' .. quarto.base64.encode(css_local);
-                end
-
-                icontent = icontent .. '    <style>\n'
-                icontent = icontent .. '        @import url("' .. options['src_css'] .. '");\n'
-                icontent = icontent .. '    </style>\n'
-
-                --icontent = icontent .. '    <link rel="stylesheet" type="text/css" href="' .. options['src_css'] .. '">\n'
-
-                icontent = icontent .. '    <style>\n'
-                icontent = icontent .. '      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }\n'
-                icontent = icontent .. '      .jxgbox { border: none; }\n'
-                icontent = icontent .. '    </style>\n'
-                icontent = icontent .. '  </head>\n'
-                icontent = icontent .. '  <body>\n'
-                icontent = icontent .. '    <div id="' .. id .. '" class="jxgbox" style="width: 100%; height: 100%; display: block; object-fit: fill; box-sizing: border-box;"></div>\n'
-                icontent = icontent .. '    <script>\n'
-                icontent = icontent .. jsxgraph .. '\n'
-                icontent = icontent .. '    </script>\n'
-                icontent = icontent .. '  </body>\n'
-                icontent = icontent .. '</html>\n'
-
-                ]]
-
                 -- Base64 of iframe content.
 
                 local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(icontent);
@@ -465,13 +414,14 @@ function Pandoc(doc)
 
     local options = {
         iframe_id = nil,
-        width = '500',
-        height = '500',
+        width = '400',
+        height = '400',
         render = 'iframe',
         dom = 'chrome',
         style = 'border: 1px solid black; border-radius: 10px;',
         class = '',
         echo = false,
+        unit = px,
         reload = false,
         src_jxg = pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}), --'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
