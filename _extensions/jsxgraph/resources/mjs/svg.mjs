@@ -18,12 +18,11 @@
         }
     }, uuid);
 
-    console.log(boardOptions);
-
     createSvg({
         dataURI: dataURI,
-        width: width,
-        height: height,
+        width: parseFloat(width),
+        height: parseFloat(height),
+        unit: unit,
         svgFilename: svgFilename,
         backgroundColor: (dom == 'chrome') ? '#afa' : '#faa',
         borderWidth: parseFloat(boardOptions['borderWidth']),
@@ -39,6 +38,7 @@ function createSvg({
                        dataURI,
                        width,
                        height,
+                       unit,
                        svgFilename,
                        backgroundColor,
                        borderWidth,

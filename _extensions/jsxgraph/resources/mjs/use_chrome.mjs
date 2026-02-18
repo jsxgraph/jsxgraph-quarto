@@ -21,6 +21,7 @@ const dom = options.dom || 'chrome';
 const src_mjx = options.src_mjx || '';
 const src_css = options.src_css || 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css';
 const uuid = options.uuid || 'jxg_box';
+const unit = options.unit || "px";
 
 async function main() {
     const browser = await puppeteer.launch({headless: "new"});
@@ -46,7 +47,7 @@ async function main() {
     </style>
   </head>
   <body>
-    <div id="${uuid}" class="jxgbox" style="width: 20em; height: 20em; display: block; object-fit: fill; box-sizing: border-box; ${style}"></div>
+    <div id="${uuid}" class="jxgbox" style="width: ${width}${unit}; height: ${height}${unit}; display: block; object-fit: fill; box-sizing: border-box; ${style}"></div>
   </body>
 </html>
 `);

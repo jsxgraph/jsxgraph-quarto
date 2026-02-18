@@ -102,6 +102,17 @@ local function remove_file(path)
     end
 end
 
+local function uuid()
+    local template = 'xxxxxxxx_xxxx_xxxx_xxxx_xxxxxxxx'
+    return 'JXG' .. string.gsub(template, '[xy]', function(c)
+        local r = math.random(0, 15)
+        if c == 'x' then
+            return string.format('%x', r)
+        else
+            return string.format('%x', (r % 4) + 8)
+        end
+    end)
+end
 
 local function render_jsxgraph(globalOptions)
 
@@ -147,24 +158,12 @@ local function render_jsxgraph(globalOptions)
                 end
             end
 
-            -- Generate id.
+            -- Generate id as uuid.
 
             math.randomseed(os.time() + os.clock() * 1000000)
-            local function uuid()
-                local template = 'xxxxxxxx_xxxx_xxxx_xxxx_xxxxxxxx'
-                return 'JXG' .. string.gsub(template, '[xy]', function(c)
-                    local r = math.random(0, 15)
-                    if c == 'x' then
-                        return string.format('%x', r)
-                    else
-                        return string.format('%x', (r % 4) + 8)
-                    end
-                end)
-            end
-
             local id = uuid()
 
-            -- next JSXGraph board.
+            -- Next JSXGraph board.
 
             svg_counter = svg_counter + 1
 
@@ -200,9 +199,6 @@ local function render_jsxgraph(globalOptions)
 
                 -- Export svg.
 
-                -- Tests if directors exists.
-
-
                 -- Hidden directory for mjs and svg files.
 
                 local temp_dir = ".temp_jsxgraph"
@@ -221,11 +217,6 @@ local function render_jsxgraph(globalOptions)
 
                 -- Create mjs file for nodejs.
 
-
-                --if options['src_jxg'] == '' then
-                --    options['src_jxg'] = pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"})
-                --end
-
                 local use_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "use_" .. options['dom'] .. ".mjs"}))
                 local svg_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "svg.mjs"}))
                 local content_node = use_file .. jsxgraph .. svg_file .. [[
@@ -237,7 +228,7 @@ local function render_jsxgraph(globalOptions)
                 local node_cmd = ''
 
                 node_cmd = string.format(
-                    "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q src_mjx=%q src_css=%q dom=%q uuid=%q",
+                    "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q src_mjx=%q src_css=%q dom=%q unit=%q uuid=%q",
                     options['width'],
                     options['height'],
                     options['style'],
@@ -245,8 +236,11 @@ local function render_jsxgraph(globalOptions)
                     options['src_mjx'],
                     options['src_css'],
                     options['dom'],
+                    options['unit'],
                     id -- uuid
                 )
+
+                --quarto.log.output(node_cmd)
 
                 -- Execute nodejs command.
 
@@ -335,20 +329,8 @@ local function render_jsxgraph(globalOptions)
 
                 -- Set width an height.
 
-                local function normalize_size(value)
-                    value = value:match("^%s*(.-)%s*$")
-                    if value:match("^%d+$") then
-                        return value .. "px"
-                    else
-                        return value
-                    end
-                end
-
-                options['width'] = normalize_size(options['width'])
-                options['height'] = normalize_size(options['height'])
-
                 iframe = iframe .. ' class="' .. options['class'] .. '"'
-                iframe = iframe .. ' style="width:' .. options['width'] .. '; height:' .. options['height'] .. ';position: relative; margin:0; padding:0; display: block; z-index: 1; ' .. options['style'] .. ';"'
+                iframe = iframe .. ' style="width:' .. options['width'] .. options['unit'] .. '; height:' .. options['height'] .. options['unit'].. ';position: relative; margin:0; padding:0; display: block; z-index: 1; ' .. options['style'] .. ';"'
                 iframe = iframe .. ' name="iframe' .. id .. '"'
                 iframe = iframe .. '></iframe>\n'
 
@@ -421,7 +403,7 @@ function Pandoc(doc)
         style = 'border: 1px solid black; border-radius: 10px;',
         class = '',
         echo = false,
-        unit = px,
+        unit = 'px',
         reload = false,
         src_jxg = pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}), --'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
