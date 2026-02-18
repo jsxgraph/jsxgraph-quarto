@@ -397,8 +397,8 @@ function Pandoc(doc)
 
     local options = {
         iframe_id = nil,
-        width = '400',
-        height = '400',
+        width = '500',
+        height = '500',
         render = 'iframe',
         dom = 'chrome',
         style = 'border: 1px solid black; border-radius: 10px;',
