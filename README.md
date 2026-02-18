@@ -111,7 +111,7 @@ filters:
 
 
 ````
-```{.jsxgraph width="400" style="border:1px solid #ccc; border-radius:5px" show_source=true}
+```{.jsxgraph width="400" style="border:1px solid #ccc; border-radius:5px" echo=true}
 var board = JXG.JSXGraph.initBoard('BOARDID', {
   boundingbox: [-5, 5, 5, -5],
   axis: true,
