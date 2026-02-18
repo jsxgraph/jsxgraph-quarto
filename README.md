@@ -55,7 +55,6 @@ JSXGraph Extention supports different DOM generators to render SVGs. You can cho
 | Generator    | npm / Setup Steps                                                                                                                            | Notes                                                                                                   |
 |-------------|-----------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
 | `chrome`    | Install via npm: <br>```bash npm install puppeteer ```<br>Requires local Chrome installation.                                                 | Download Chrome from [Google Chrome](https://www.google.com/chrome/). Uses real browser environment.                               |
-| `jsdom`     | Install via npm: <br>```bash npm install jsdom ```                                                                                            | Works out-of-the-box, but SVG support is limited.                                                       |
 | `playwright`| Install via npm: <br>```bash npm install playwright ``` <br>Then install Chrome for Playwright: <br>```bash npx playwright install chrome ``` | Provides a controlled browser environment.                                                              |
 
 
@@ -90,20 +89,20 @@ filters:
 
 ## Attributes
 
-| Attribute   | Description                                                                             | Default  |
-|-------------|-----------------------------------------------------------------------------------------|----------|
-| `class`     | Adds a CSS class to the `<iframe>`.                                                     | `none`   |
-| `dom`       | DOM generator for `svg`: `chrome`, `jsdom` of `playwright`.                              | `chrome` |
-| `echo`      | Displays the JSXGraph source code.                                                      | `false`  |
+| Attribute   | Description                                                                              | Default  |
+|-------------|------------------------------------------------------------------------------------------|----------|
+| `class`     | Adds a CSS class to the `<iframe>`.                                                      | `none`   |
+| `dom`       | DOM generator for `svg`: `chrome` or`playwright`.                                        | `chrome` |
+| `echo`      | Displays the JSXGraph source code.                                                       | `false`  |
 | `height`    | Height in pixels (e.g. `500`) or percent (e.g. `50%`). For other CSS units, use `style`. | `500`    |
-| `iframe_id` | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.            | —        |
-| `reload`    | Shows a reload button when `render="iframe"`.                                           | `false`  |
-| `render`    | Static export with `svg`; interactive html export with `iframe` (recommended) or `div`. | `iframe` |
-| `src_css`   | Path to `jsxgraph.css`.                                                                 | —        |
-| `src_jxg`   | Path to `jsxgraphcore.js`.                                                              | —        |
-| `src_mjx`   | Path to the MathJax file.                                                               | —        |
-| `style`     | Custom CSS (e.g. `border: 5px solid red; border-radius: 10px;`).                        | `none`   |
-| `width`     | Width in pixels (e.g. `500`) or percent (e.g. `50%`). For other CSS units, use `style`. | `500`    |
+| `iframe_id` | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.             | —        |
+| `reload`    | Shows a reload button when `render="iframe"`.                                            | `false`  |
+| `render`    | Static export with `svg`; interactive html export with `iframe` (recommended) or `div`.  | `iframe` |
+| `src_css`   | Path to `jsxgraph.css`.                                                                  | —        |
+| `src_jxg`   | Path to `jsxgraphcore.js`.                                                               | —        |
+| `src_mjx`   | Path to the MathJax file.                                                                | —        |
+| `style`     | Custom CSS (e.g. `border: 5px solid red; border-radius: 10px;`).                         | `none`   |
+| `width`     | Width in pixels (e.g. `500`) or percent (e.g. `50%`). For other CSS units, use `style`.  | `500`    |
 
 ---
 
