@@ -277,10 +277,11 @@ local function render_jsxgraph(globalOptions)
 
                 -- Create iframe content.
 
-                if options['src_jxg'] == '' then
+                if not options['src_jxg']:match("^http") then
                     local jsxgraph_local = ioRead(pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}))
                     options['src_jxg'] = 'data:text/javascript;base64,' .. quarto.base64.encode(jsxgraph_local)
                 end
+
 
                 if options['src_css'] ~= '' then
                     local css_local = ioRead(pandoc.path.join({extension_dir, "resources", "css", "jsxgraph.css"}))
@@ -302,17 +303,17 @@ local function render_jsxgraph(globalOptions)
     </style>
     <style>
       html, body { margin: 0; padding: 0; width: 100%%; height: 100%%; }
-      .jxgbox { border: none; }
+      .jxgbox { border: none; border-radius: 0px; }
     </style>
   </head>
   <body>
-    <div id="%s" class="jxgbox" style="width: 100%%; height: 100%%; display: block; object-fit: fill; box-sizing: border-box; %s"></div>
+    <div id="%s" class="jxgbox" style="width: 100%%; height: 100%%; display: block; object-fit: fill; box-sizing: border-box;"></div>
     <script>
 %s
     </script>
   </body>
 </html>
-]], options['src_mjx'], options['src_jxg'], options['src_css'], id, options['style'], jsxgraph)
+]], options['src_mjx'], options['src_jxg'], options['src_css'], id, jsxgraph)
 
                 -- Base64 of iframe content.
 
