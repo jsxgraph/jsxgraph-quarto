@@ -132,7 +132,7 @@ Check out a working example: [example.qmd](example.qmd).
 
 - **SVG export** works for `pdf` and `docx`.  
 - **Interactive export** works for `html` and `revealjs`.  
-- Use `show_source=true` to display the JSXGraph source code below the board.  
+- Use `echo=true` to display the JSXGraph source code below the board.  
 - Customize layout via `width`, `height`, `style`, and `class`.
 
 ---
