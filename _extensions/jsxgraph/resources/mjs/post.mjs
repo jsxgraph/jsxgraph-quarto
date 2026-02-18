@@ -1,24 +1,38 @@
+    });
+
+    const dataURI = await page.evaluate(() => {
+        const board = Object.values(JXG.boards)
+            .find(b => b.container === "jxg_box");
+        if (!board) return null;
+
+        return board.renderer.dumpToDataURI(false); // SVG Data-URI
+    });
+
+    createSvg({
+        dataURI: dataURI,
+        width: width,
+        height: height,
+        svgFilename: svgFilename,
+        backgroundColor: '#afa'
+    });
+    //*/
+    await browser.close();
+}
+
+main().catch(console.error);
 
 function createSvg({
-                       svgElement,
+                       dataURI,
                        width,
                        height,
                        svgFilename,
                        backgroundColor = '#ff0',
                        borderWidth = 1,
                        borderRadius = 12,
-                       padding = 10
+                       padding = 0
                    }) {
     const newWidth = width + 2 * borderWidth + 2 * padding;
     const newHeight = height + 2 * borderWidth + 2 * padding;
-
-    function sanitizeSVGContent(content) {
-        return content
-            .replace(/xlink:href=/g, 'href=')
-            .trim();
-    }
-
-    const sanitizedInnerContent = sanitizeSVGContent(svgElement);
 
     const svgWithBorder = `<svg 
     width="${newWidth}" 
@@ -49,10 +63,10 @@ function createSvg({
         fill="${backgroundColor}"
     />
 
-    <!-- Content -->
+    <!-- Embedded SVG as Image -->
     <g clip-path="url(#rounded-clip)">
         <g transform="translate(${padding + borderWidth}, ${padding + borderWidth})">
-            ${sanitizedInnerContent}
+            <image href="${dataURI}" width="${width}" height="${height}" />
         </g>
     </g>
 

@@ -193,10 +193,9 @@ local function render_jsxgraph(globalOptions)
 
                 -- Create mjs file for nodejs.
 
-                local content_before = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", options['dom'] .. "_before.mjs"}))
-                local content_after = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", options['dom'] .. "_after.mjs"}))
-                local create_svg = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "create_svg.mjs"}))
-                local content_node = content_before .. jsxgraph .. content_after .. create_svg .. [[
+                local import_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "import_" .. options['dom'] .. ".mjs"}))
+                local post_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "post.mjs"}))
+                local content_node = import_file .. jsxgraph .. post_file .. [[
                 ]]
                 ioWrite(file_node_path, content_node)
 

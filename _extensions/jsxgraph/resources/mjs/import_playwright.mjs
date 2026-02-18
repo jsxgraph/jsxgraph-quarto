@@ -1,4 +1,5 @@
-import puppeteer from "puppeteer";
+import { chromium } from "playwright";
+
 import fs from "fs";
 
 const svgFilename = process.argv[2] || 'board.svg';
@@ -6,7 +7,6 @@ const args = process.argv.slice(2);
 const options = {};
 for (let i = 1; i < args.length; i++) {
     const [key, value] = args[i].split("=");
-    //if (key && value) options[key] = value;
     if (key && value !== undefined) {
         const numValue = Number(value);
         options[key] = isNaN(numValue) ? value : numValue;
@@ -19,10 +19,11 @@ const style = options.style || "";
 const src_jxg = options.src_jxg || "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js";
 
 async function main() {
-    const browser = await puppeteer.launch({ headless: "new" });
-    const page = await browser.newPage();
-
-    await page.setViewport({ width: parseInt(width), height: parseInt(height) });
+    const browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({
+        viewport: { width: parseInt(width), height: parseInt(height) }
+    });
+    const page = await context.newPage();
 
     await page.setContent(`
 <!DOCTYPE html>
@@ -39,6 +40,8 @@ body { margin:0; }
 </html>
     `);
 
+    // JSXGraph laden
     await page.addScriptTag({ url: src_jxg });
 
+    // Board erstellen
     await page.evaluate(() => {
