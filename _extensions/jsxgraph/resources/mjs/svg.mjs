@@ -4,16 +4,30 @@
         const board = Object.values(JXG.boards)
             .find(b => b.container === uuid);
         if (!board) return null;
-
+        board.setAttribute({showNavigation: false})
         return board.renderer.dumpToDataURI(false); // SVG Data-URI
     }, uuid);
+
+    const boardOptions = await page.evaluate((uuid) => {
+        const board = Object.values(JXG.boards)
+            .find(b => b.container === uuid);
+        if (!board) return null;
+        return {
+            borderWidth: getComputedStyle(board.containerObj).borderWidth,
+            borderRadius: getComputedStyle(board.containerObj).borderRadius
+        }
+    }, uuid);
+
+    console.log(boardOptions);
 
     createSvg({
         dataURI: dataURI,
         width: width,
         height: height,
         svgFilename: svgFilename,
-        backgroundColor: (dom == 'chrome') ? '#afa' : '#faa'
+        backgroundColor: (dom == 'chrome') ? '#afa' : '#faa',
+        borderWidth: parseFloat(boardOptions['borderWidth']),
+        borderRadius: parseFloat(boardOptions['borderRadius'])
     });
     //*/
     await browser.close();
@@ -26,9 +40,9 @@ function createSvg({
                        width,
                        height,
                        svgFilename,
-                       backgroundColor = '#ff0',
-                       borderWidth = 1,
-                       borderRadius = 12,
+                       backgroundColor,
+                       borderWidth,
+                       borderRadius,
                        padding = 0
                    }) {
     const newWidth = width + 2 * borderWidth + 2 * padding;

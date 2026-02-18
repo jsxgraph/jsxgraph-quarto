@@ -18,6 +18,8 @@ const height = options.height || 600;
 const style = options.style || "";
 const src_jxg = options.src_jxg || "https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js";
 const dom = options.dom || 'chrome';
+const src_mjx = options.src_mjx || '';
+const src_css = options.src_css || 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css';
 const uuid = options.uuid || 'jxg_box';
 
 async function main() {

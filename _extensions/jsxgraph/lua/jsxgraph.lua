@@ -239,11 +239,13 @@ local function render_jsxgraph(globalOptions)
                 local node_cmd = ''
 
                 node_cmd = string.format(
-                    "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q dom=%q uuid=%q",
+                    "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q src_mjx=%q src_css=%q dom=%q uuid=%q",
                     options['width'],
                     options['height'],
                     options['style'],
                     options['src_jxg'],
+                    options['src_mjx'],
+                    options['src_css'],
                     options['dom'],
                     id -- uuid
                 )
@@ -312,13 +314,13 @@ local function render_jsxgraph(globalOptions)
     </style>
   </head>
   <body>
-    <div id="%s" class="jxgbox" style="width: 100%%; height: 100%%; display: block; object-fit: fill; box-sizing: border-box;"></div>
+    <div id="%s" class="jxgbox" style="width: 100%%; height: 100%%; display: block; object-fit: fill; box-sizing: border-box; %s"></div>
     <script>
 %s
     </script>
   </body>
 </html>
-]], options['src_mjx'], options['src_jxg'], options['src_css'], id, jsxgraph)
+]], options['src_mjx'], options['src_jxg'], options['src_css'], id, options['style'], jsxgraph)
 
                 --[[
                 local icontent = '<!DOCTYPE html>\n'
@@ -473,7 +475,7 @@ function Pandoc(doc)
         reload = false,
         src_jxg = pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}), --'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
         src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
-        src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js'
+        src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-svg.js'
     }
 
     -- Process global attributes.
