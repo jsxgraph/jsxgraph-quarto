@@ -46,6 +46,7 @@ local function is_nonempty_string(x)
 end
 
 -- Read file.
+
 local function ioRead(file)
     local ioFile = io.open(file, "r")
     local ioContent = ioFile:read("*a")
@@ -54,12 +55,14 @@ local function ioRead(file)
 end
 
 -- Write file.
+
 local function ioWrite(file, content)
     local ioFile = io.open(file, "w")
     ioFile:write(content)
     ioFile:close()
 end
 
+-- Tests if directory exists.
 local function dir_exists(path)
     local ok, err, code = os.rename(path, path)
     if ok then
@@ -102,6 +105,8 @@ local function remove_file(path)
     end
 end
 
+-- Generate uuid.
+
 local function uuid()
     local template = 'xxxxxxxx_xxxx_xxxx_xxxx_xxxxxxxx'
     return 'JXG' .. string.gsub(template, '[xy]', function(c)
@@ -113,6 +118,54 @@ local function uuid()
         end
     end)
 end
+
+-- Parse number (integer or decimal).
+
+local function parseNumber(s)
+    if not s or s == "" then return nil end
+    -- Entfernt führende/trailing Leerzeichen
+    s = s:match("^%s*(.-)%s*$")
+    return tonumber(s)
+end
+
+-- Parse aspect ratio (integer or decimal, e.g., "16/9", "1.7777", "33.33/20").
+
+local function parseAspect(s)
+    if not s or s == "" then return 1 end
+    s = s:match("^%s*(.-)%s*$") -- trim whitespace
+    local a, b = s:match("([%d%.]+)%s*/%s*([%d%.]+)")
+    if a and b then
+        local numA, numB = tonumber(a), tonumber(b)
+        if numB ~= 0 then
+            return numA / numB
+        else
+            return 1
+        end
+    end
+    local n = tonumber(s)
+    return n or 1
+end
+
+-- Calculate dimensions.
+
+local function calculate_dimensions(widthStr, heightStr, aspectStr)
+    local width = parseNumber(widthStr)
+    local height = parseNumber(heightStr)
+    local aspect = parseAspect(aspectStr)
+
+    if width and not height then
+        height = width / aspect
+    elseif height and not width then
+        width = height * aspect
+    elseif not width and not height then
+        width = 500 -- default width
+        height = width / aspect
+    end
+
+    return tostring(width), tostring(height)
+end
+
+-- Render JSXGraph
 
 local function render_jsxgraph(globalOptions)
 
@@ -157,6 +210,10 @@ local function render_jsxgraph(globalOptions)
                     end
                 end
             end
+
+            -- Calculate width and height.
+
+            options['width'], options['height'] = calculate_dimensions(options['width'], options['height'], options['aspect_ratio'])
 
             -- Generate id as uuid.
 
@@ -217,10 +274,20 @@ local function render_jsxgraph(globalOptions)
 
                 -- Create mjs file for nodejs.
 
-                local use_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "use_" .. options['dom'] .. ".mjs"}))
-                local svg_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "svg.mjs"}))
-                local content_node = use_file .. jsxgraph .. svg_file .. [[
+                local part_1 = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "part_1_" .. options['dom'] .. ".mjs"}))
+                local part_2 = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "part_2.mjs"}))
+                local part_3 = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "part_3_" .. options['dom'] .. ".mjs"}))
+                local part_4 = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "part_4.mjs"}))
+                local part_5 = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "part_5.mjs"}))
+
+                --local use_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "use_" .. options['dom'] .. ".mjs"}))
+                --local svg_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "svg.mjs"}))
+                --local content_node = use_file .. jsxgraph .. svg_file .. [[
+                --]]
+
+                local content_node = part_1 .. part_2 .. part_3 .. part_4 .. jsxgraph .. part_5 .. [[
                 ]]
+
                 ioWrite(file_node_path, content_node)
 
                 -- Create nodejs command.
@@ -228,7 +295,7 @@ local function render_jsxgraph(globalOptions)
                 local node_cmd = ''
 
                 node_cmd = string.format(
-                    "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q src_mjx=%q src_css=%q dom=%q unit=%q uuid=%q",
+                    "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q src_mjx=%q src_css=%q dom=%q unit=%q textwidth=%q uuid=%q",
                     options['width'],
                     options['height'],
                     options['style'],
@@ -237,6 +304,7 @@ local function render_jsxgraph(globalOptions)
                     options['src_css'],
                     options['dom'],
                     options['unit'],
+                    options['textwidth'],
                     id -- uuid
                 )
 
@@ -326,12 +394,17 @@ local function render_jsxgraph(globalOptions)
                     iframe = iframe .. ' id="' .. options['iframe_id'] .. '" '
                 end
                 iframe = iframe .. ' src="' .. jsx_b64 .. '" '
-                iframe = iframe .. ' sandbox="allow-scripts  allow-same-origin" '
+                iframe = iframe .. ' sandbox="allow-scripts" '
 
                 -- Set width an height.
 
                 iframe = iframe .. ' class="' .. options['class'] .. '"'
-                iframe = iframe .. ' style="width:' .. options['width'] .. options['unit'] .. '; height:' .. options['height'] .. options['unit'].. ';position: relative; margin:0; padding:0; display: block; z-index: 1; ' .. options['style'] .. ';"'
+
+                if options['unit'] == "%" then
+                    iframe = iframe .. ' style="width:' .. options['width'] .. options['unit'] .. '; aspect-ratio: ' .. options['width'].. ' / ' .. options['height'] .. '; position: relative; margin:0; padding:0; display: block; z-index: 1; ' .. options['style'] .. ';"'
+                else
+                    iframe = iframe .. ' style="width:' .. options['width'] .. options['unit'] .. '; height:' .. options['height'] .. options['unit'].. '; position: relative; margin:0; padding:0; display: block; z-index: 1; ' .. options['style'] .. ';"'
+                end
                 iframe = iframe .. ' name="iframe' .. id .. '"'
                 iframe = iframe .. '></iframe>\n'
 
@@ -341,37 +414,9 @@ local function render_jsxgraph(globalOptions)
                     options.reload = options.reload == "true"
                 end
 
-                -- Add iframe.
-
-                if options.reload then
-
-                    -- Fix div vs iframe margin differences.
-
-                    -- ToDo: Different behaviour in revealjs.
-
-                    local margin_b = 10;
-                    if options.echo then
-                        margin_b = -8
-                    end
-
-                    -- Add reload button.
-
-                    html = '<div style="border: none; margin-bottom: ' .. margin_b .. 'px; position: relative; display: inline-block;\n">'
-                    html = html .. '<button  id="button' .. id .. '" style="position: absolute; bottom: 0px; left: 2px; z-index: 2; background-color: transparent; color: #000000; border: none; font-size: 16px; cursor: pointer;">&#x21BA;</button>\n'
-                    html = html .. iframe .. '\n'
-                    html = html .. '</div>\n'
-                    html = html .. '<script>\n'
-                    html = html .. '    const btn' .. id .. ' = document.getElementById("button' .. id .. '");\n'
-                    html = html .. '    const iframe' .. id .. ' = document.getElementsByName("iframe' .. id .. '")[0]\n'
-                    html = html .. '    btn' .. id .. '.addEventListener("click", () => { iframe' .. id .. '.src = iframe' .. id .. '.src; });\n'--contentWindow.location.reload();
-                    html = html .. '</script>\n'
-                else
-                    html = iframe
-                end
-
                 -- Create pandoc.RawBlock.
 
-                local html_code = pandoc.RawBlock("html", html)
+                local html_code = pandoc.RawBlock("html", iframe)
 
                 -- Return content with/without JSXGRaph code.
 
@@ -398,16 +443,18 @@ function Pandoc(doc)
     local options = {
         iframe_id = nil,
         width = '500',
-        height = '500',
+        height = nil,
+        aspect_ratio = "1 / 1",
         render = 'iframe',
         dom = 'chrome',
+        textwidth = '20cm',
         style = 'border: 1px solid black; border-radius: 10px;',
         class = '',
         echo = false,
         unit = 'px',
         reload = false,
         src_jxg = pandoc.path.join({extension_dir, "resources", "js", "jsxgraphcore.js"}), --'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
-        src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
+        src_css = pandoc.path.join({extension_dir, "resources", "css", "jsxgraph.css"}), -- 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-svg.js'
     }
 
