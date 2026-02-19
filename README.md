@@ -91,7 +91,7 @@ filters:
 
 | Attribute      | Description                                                                            | Default  |
 |----------------|----------------------------------------------------------------------------------------|----------|
-| `aspect_ratio` | Sets the `width`-to-`height` ratio.                                                     | `1 / 1`  |
+| `aspect_ratio` | Sets the `width`-to-`height` ratio.                                                     | `1/1`  |
 | `class`        | Adds a CSS class to the `<iframe>`.                                                    | `none`   |
 | `dom`          | DOM generator for `svg`: `chrome` or`playwright`.                                      | `chrome` |
 | `echo`         | Displays the JSXGraph source code.                                                     | `false`  |
@@ -104,7 +104,7 @@ filters:
 | `src_mjx`      | Path to the MathJax file.                                                              | —        |
 | `style`        | Custom CSS (e.g. `border: 5px solid red; border-radius: 10px;`).                       | `none`   |
 | `unit`         | Unit for `width`and `height` (e.g. `px`, `em`, `rem`, `cm`, `mm`, `in`, `pt`).         | `px`     |
-| `width`        | Width in pixels (e.g. `500`).                                                          | `500`    |
+| `width`        | Width in pixels (e.g. `500`).                                                          | `nil`    |
 
 ---
 
