@@ -24,7 +24,7 @@ createSvg({
     height: parseFloat(height),
     unit: unit,
     svgFilename: svgFilename,
-    backgroundColor: (dom == 'chrome') ? '#afa' : '#faa',
+    backgroundColor: "none", //(dom == 'chrome') ? '#afa' : '#faa',
     borderWidth: parseFloat(boardOptions['borderWidth']),
     borderRadius: parseFloat(boardOptions['borderRadius'])
 });
@@ -52,12 +52,11 @@ function createSvg({
     const br = parseFloat(borderRadius);
     const p = parseFloat(padding);
 
-    // Umrechnung absolute Einheiten in px (SVG Standard: 96dpi)
     let factor = 1;
     switch(unit) {
         case "px": factor = 1; break;
-        case "em": factor = 17; break;   // gewünschter Basiswert
-        case "rem": factor = 17; break;
+        case "em": factor = 16; break;
+        case "rem": factor = 16; break;
         case "cm": factor = 37.7952755906; break;
         case "mm": factor = 3.7795275591; break;
         case "in": factor = 96; break;
@@ -65,7 +64,6 @@ function createSvg({
         default: factor = 1; break;
     }
 
-    // SVG-Gesamtgröße in px für Border & Padding (viewBox Basis)
     const svgWidthPx = wNum * factor + 2 * bw + 2 * p;
     const svgHeightPx = hNum * factor + 2 * bw + 2 * p;
 

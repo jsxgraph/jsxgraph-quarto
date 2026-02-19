@@ -337,6 +337,21 @@ local function render_jsxgraph(globalOptions)
 
                 -- Export html.
 
+                -- Add reload button.
+
+                if options.reload then
+
+                    local button = string.format([[
+
+const board_%s = Object.values(JXG.boards).find(b => b.container === %q);
+board_%s.setAttribute({ showReload: true });
+board_%s.reload = function() { window.location.reload(); };
+                ]], id, id, id, id)
+
+                    jsxgraph = jsxgraph .. button
+
+                end
+
                 -- Code for <div> and <iframe>.
 
                 local html = ''
@@ -442,9 +457,9 @@ function Pandoc(doc)
 
     local options = {
         iframe_id = nil,
-        width = '500',
+        width = nil,
         height = nil,
-        aspect_ratio = "1 / 1",
+        aspect_ratio = "1/1",
         render = 'iframe',
         dom = 'chrome',
         textwidth = '20cm',
