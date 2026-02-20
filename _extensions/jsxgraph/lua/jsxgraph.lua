@@ -11,6 +11,10 @@ local EXTENSION_NAME = "JSXGraph"
 
 local svg_counter = 0
 
+-- Random clock set.
+
+math.randomseed(os.time() + os.clock() * 1000000)
+
 -- Set Paths.
 
 local script_path = debug.getinfo(1, "S").source:sub(2)
@@ -148,9 +152,9 @@ end
 -- Remove file if exists.
 
 local function remove_file(path)
-    if dir_exists(path) then
-        local success, err = os.remove(path)
-    end
+    -- if dir_exists(path) then
+    local success, err = os.remove(path)
+    -- end
 end
 
 -- Generate uuid.
@@ -265,7 +269,6 @@ local function render_jsxgraph(globalOptions)
 
             -- Generate id as uuid.
 
-            math.randomseed(os.time() + os.clock() * 1000000)
             local id = uuid()
 
             -- Next JSXGraph board.
