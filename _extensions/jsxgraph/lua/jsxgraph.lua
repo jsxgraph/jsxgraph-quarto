@@ -48,10 +48,6 @@ end
 -- Read file.
 
 local function ioRead(file)
-    --    local ioFile = io.open(file, "r")
-    --    local ioContent = ioFile:read("*a")
-    --    ioFile:close()
-    --    return ioContent
     local ioFile, err = io.open(file, "r")
     if not ioFile then
         error("Cannot open file: " .. file .. "\n" .. (err or "unknown error"))
@@ -65,8 +61,17 @@ end
 -- Write file.
 
 local function ioWrite(file, content)
-    local ioFile = io.open(file, "w")
-    ioFile:write(content)
+    local ioFile, err = io.open(file, "w")
+    if not ioFile then
+        error("Cannot open file for writing: " .. file .. "\n" .. (err or "unknown error"))
+    end
+
+    local ok, writeErr = ioFile:write(content)
+    if not ok then
+        ioFile:close()
+        error("Failed to write to file: " .. file .. "\n" .. (writeErr or "unknown error"))
+    end
+
     ioFile:close()
 end
 
