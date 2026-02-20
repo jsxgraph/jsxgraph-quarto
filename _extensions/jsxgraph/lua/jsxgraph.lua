@@ -11,6 +11,8 @@ local EXTENSION_NAME = "JSXGraph"
 
 local svg_counter = 0
 
+-- Set Paths.
+
 local script_path = debug.getinfo(1, "S").source:sub(2)
 local lua_dir = pandoc.path.directory(script_path)
 local extension_dir = pandoc.path.directory(lua_dir)
@@ -76,6 +78,7 @@ local function ioWrite(file, content)
 end
 
 -- Tests if directory exists.
+
 local function dir_exists(path)
     local ok, err, code = os.rename(path, path)
     if ok then
@@ -102,6 +105,38 @@ local function ensure_hidden_dir(path)
         os.execute('mkdir -p "' .. path .. '"')
     end
 end
+
+-- Hidden directory for mjs and svg files.
+
+local function get_temp_dir()
+    if package.config:sub(1,1) == "\\" then
+        -- Windows: use %TEMP%
+        local tmp = os.getenv("TEMP") or ".temp_jsxgraph"
+        tmp = tmp:gsub("\\", "/") -- normalize slashes for Node
+        ensure_hidden_dir(tmp)
+        return tmp
+    else
+        -- macOS/Linux
+        local tmp = ".temp_jsxgraph"
+        ensure_hidden_dir(tmp)
+        return tmp
+    end
+end
+
+-- Execute Node synchronously without reading stdout.
+
+local function run_node(node_cmd)
+    -- Wrap in quotes for Windows
+    if package.config:sub(1,1) == "\\" then
+        node_cmd = node_cmd:gsub("/", "\\")
+    end
+    -- Use os.execute, don't read stdout
+    local ok, exit_type, code = os.execute(node_cmd)
+    if not ok or code ~= 0 then
+        error("Node.js execution failed: " .. node_cmd)
+    end
+end
+
 
 -- Set directory path.
 
@@ -267,25 +302,19 @@ local function render_jsxgraph(globalOptions)
 
             if render == 'svg' then
 
-                -- Export svg.
+                -- SVG
 
-                -- Hidden directory for mjs and svg files.
+                -- Rendering pathes.
 
-                local temp_dir = ".temp_jsxgraph"
-                ensure_hidden_dir(temp_dir)
-
-                -- Prefix for files.
-
+                local temp_dir = get_temp_dir()
                 local prefix = "file_" .. svg_counter .. "_"
-
-                -- Set file paths and remove files if exit.
 
                 local file_node_path = join_path(temp_dir, prefix .. "code_node_board.mjs")
                 remove_file(file_node_path)
                 local file_svg_path = join_path(temp_dir, prefix .. "board.svg")
                 remove_file(file_svg_path)
 
-                -- Create mjs file for nodejs.
+                -- Read parts of Node script.
 
                 local part_1 = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "part_1_" .. options['dom'] .. ".mjs"}))
                 local part_2 = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "part_2.mjs"}))
@@ -293,22 +322,16 @@ local function render_jsxgraph(globalOptions)
                 local part_4 = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "part_4.mjs"}))
                 local part_5 = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "part_5.mjs"}))
 
-                --local use_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs", "use_" .. options['dom'] .. ".mjs"}))
-                --local svg_file = ioRead(pandoc.path.join({extension_dir, "resources", "mjs",  "svg.mjs"}))
-                --local content_node = use_file .. jsxgraph .. svg_file .. [[
-                --]]
-
+                -- Merge Node script.
                 local content_node = part_1 .. part_2 .. part_3 .. part_4 .. jsxgraph .. part_5 .. [[
                 ]]
-
                 ioWrite(file_node_path, content_node)
 
-                -- Create nodejs command.
+                -- Node command.
 
-                local node_cmd = ''
-
-                node_cmd = string.format(
-                        "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q src_mjx=%q src_css=%q dom=%q unit=%q textwidth=%q uuid=%q",
+                local node_cmd = string.format(
+                        'node "%s" "%s" width=%q height=%q style=%q src_jxg=%q src_mjx=%q src_css=%q dom=%q unit=%q textwidth=%q uuid=%q',
+                        file_node_path, file_svg_path,
                         options['width'],
                         options['height'],
                         options['style'],
@@ -318,27 +341,20 @@ local function render_jsxgraph(globalOptions)
                         options['dom'],
                         options['unit'],
                         options['textwidth'],
-                        id -- uuid
+                        id
                 )
 
-                --quarto.log.output(node_cmd)
+                -- Run Node synchronously.
 
-                -- Execute nodejs command.
+                run_node(node_cmd)
 
-                local handle = io.popen(node_cmd)
-                local result = handle:read("*a")
-                handle:close()
-
-                -- Create svg file.
+                -- Read generated SVG.
 
                 local svg_file = ioRead(file_svg_path)
-
-                -- Create pandoc.Image.
-
                 local img = pandoc.Image({}, file_svg_path, "")
                 local svg_code = pandoc.Para({img})
 
-                -- Return content with/without JSXGRaph code.
+                -- Add code block.
 
                 if options.echo then
                     local codeBlock = pandoc.CodeBlock(content.text, {class='javascript'})
