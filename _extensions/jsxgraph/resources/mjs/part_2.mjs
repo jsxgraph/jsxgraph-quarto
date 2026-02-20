@@ -23,7 +23,6 @@ let uuid = options.uuid || 'jxg_box';
 let unit = options.unit || "px";
 let textwidth = options.textwidth || "14cm";
 
-// Hilfsfunktionen
 function getUnit(value) {
     const match = value.toString().match(/[a-z%]+$/i);
     return match ? match[0] : '';
