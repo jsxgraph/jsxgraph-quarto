@@ -69,10 +69,7 @@ local TEMP_DIR
 -- Temp directory
 local function getTempDir()
     if TEMP_DIR then return TEMP_DIR end
-    if package.config:sub(1,1) == "\\" then
-        TEMP_DIR = os.getenv("TEMP") or ".temp_jsxgraph"
-        TEMP_DIR = TEMP_DIR:gsub("\\", "/")
-    else TEMP_DIR = ".temp_jsxgraph" end
+    TEMP_DIR = ".temp_jsxgraph"
     ensureHiddenDir(TEMP_DIR)
     return TEMP_DIR
 end
