@@ -191,21 +191,6 @@ local function render_jsxgraph(globalOptions)
             local file_node_path = join_path(temp_dir, prefix .. "code_node_board.mjs")
             local file_svg_path = join_path(temp_dir, prefix .. "board.svg")
 
-            --[[
-            remove_file(file_node_path)
-            remove_file(file_svg_path)
-
--- Weg
-            local part_1 = ioRead(join_path(extension_dir, "resources", "mjs", "part_1_"..options.dom..".mjs"))
-            local part_2 = ioRead(join_path(extension_dir, "resources", "mjs", "part_2.mjs"))
-            local part_3 = ioRead(join_path(extension_dir, "resources", "mjs", "part_3_"..options.dom..".mjs"))
-            local part_4 = ioRead(join_path(extension_dir, "resources", "mjs", "part_4.mjs"))
-            local part_5 = ioRead(join_path(extension_dir, "resources", "mjs", "part_5.mjs"))
-
-            local content_node = part_1..part_2..part_3..part_4..jsxgraph..part_5
-
--- ]]
-
             local content_node2 = string.format([[
 import puppeteer from "puppeteer";
 
@@ -280,7 +265,6 @@ async function main() {
 </html>
 `);
 
-
     if (fs.existsSync(src_jxg)) {
         await page.addScriptTag({ path: path.resolve(src_jxg) });
     } else if (src_jxg.startsWith('http://') || src_jxg.startsWith('https://') || src_jxg.startsWith('file://')) {
@@ -325,18 +309,17 @@ await browser.close();
 
 main().catch(console.error);
 
-
 function createSvg({
-                       dataURI,
-                       width,
-                       height,
-                       unit,            // "px", "em", "rem", "cm", "mm", "in", "pt"
-                       svgFilename,
-                       backgroundColor,
-                       borderWidth,     // in px
-                       borderRadius,    // in px
-                       padding = 0      // in px
-                   }) {
+       dataURI,
+       width,
+       height,
+       unit,            // "px", "em", "rem", "cm", "mm", "in", "pt"
+       svgFilename,
+       backgroundColor,
+       borderWidth,     // in px
+       borderRadius,    // in px
+       padding = 0      // in px
+    }) {
     const wNum = parseFloat(width);
     const hNum = parseFloat(height);
     const bw = parseFloat(borderWidth);
@@ -414,17 +397,11 @@ function createSvg({
     fs.writeFileSync(svgFilename, `<?xml version="1.0" encoding="UTF-8"?>\n${svgContent}`);
 }
             ]])
-            --quarto.log.output(content_node2)
 
-
--- Ende
             ioWrite(file_node_path, content_node2)
 
-            local node_cmd = string.format(
-                    -- 'node "%s" "%s" width=%q height=%q style=%q src_jxg=%q src_mjx=%q src_css=%q dom=%q unit=%q textwidth=%q uuid=%q',
-                    -- file_node_path, file_svg_path, options.width, options.height, options.style,
-                    'node "%s" "%s"', file_node_path, file_svg_path
-            )
+            local node_cmd = string.format('node "%s" "%s"', file_node_path, file_svg_path)
+
             run_node(node_cmd)
 
             local img = pandoc.Image({}, file_svg_path, "")
