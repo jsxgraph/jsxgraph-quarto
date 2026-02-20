@@ -118,8 +118,15 @@ end
 
 -- Node runner
 local function runNode(node_cmd)
-    if package.config:sub(1,1) == "\\" then node_cmd = node_cmd:gsub("/", "\\") end
-    local ok, _, code = os.execute(node_cmd)
+    local project_dir = pandoc.path.directory(PANDOC_STATE.output_file or ".")
+    local cd_cmd
+    if package.config:sub(1,1) == "\\" then
+        cd_cmd = 'cd /d "' .. project_dir .. '" && '
+    else
+        cd_cmd = 'cd "' .. project_dir .. '" && '
+    end
+    local full_cmd = cd_cmd .. node_cmd
+    local ok, _, code = os.execute(full_cmd)
     if not ok or code ~= 0 then error("Node.js execution failed: " .. node_cmd) end
 end
 
@@ -181,6 +188,11 @@ local function renderJsxgraph(globalOptions)
             local file_node_path = joinPath(temp_dir, prefix .. "code_node_board.mjs")
             local file_svg_path = joinPath(temp_dir, prefix .. "board.svg")
 
+            options.src_jxg = options.src_jxg:gsub("\\", "/")
+            options.src_css = options.src_css:gsub("\\", "/")
+            file_svg_path = file_svg_path:gsub("\\", "/")
+            file_node_path = file_node_path:gsub("\\", "/")
+
             local import_js
             local browser
             if(options.dom ~= 'chrome') then
@@ -203,19 +215,7 @@ import puppeteer from "puppeteer";
                 browser = string.format([[
 
 async function main() {
-        const browser = await puppeteer.launch({
-            headless: "new",
-            protocolTimeout: 60000,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--no-first-run',
-                '--no-zygote',
-                '--single-process'
-            ]
-        });
+        const browser = await puppeteer.launch({headless: "new"});
         const page = await browser.newPage();
         await page.setViewport({width: parseInt(width), height: parseInt(height)});
                 ]])
@@ -237,8 +237,9 @@ let uuid = "%s";
 let unit = "%s";
 let textwidth = "%s";
 let svgFilename = "%s";
+let reload = "%s";
 
-            ]], options.width, options.height, options.style, options.src_jxg, options.dom, options.src_mjx, options.src_css, options.uuid, options.unit, options.textwidth, file_svg_path) .. string.format([[
+            ]], options.width, options.height, options.style, options.src_jxg, options.dom, options.src_mjx, options.src_css, options.uuid, options.unit, options.textwidth, file_svg_path, options.reload) .. string.format([[
 function getUnit(value) {
     const match = value.toString().match(/[a-z%%]+$/i);
     return match ? match[0] : '';
@@ -299,8 +300,6 @@ if (unit === "%%") {
             .find(b => b.container === uuid);
         if (!board) return null;
         board.setAttribute({showNavigation: false})
-        //return board.renderer.dumpToDataURI(false); // SVG Data-URI
-
         function decodeDataURI(dataURI) {
             const base64 = dataURI.split(',')[1];
             return window.atob(base64);
@@ -472,6 +471,17 @@ function createSvg({
                 return svg_code
             end
         else
+
+            if (options.reload) then
+                jsxgraph = jsxgraph .. string.format([[
+
+const board%s = Object.values(JXG.boards) .find(b => b.container === %q);
+board%s.setAttribute({ showReload: true });
+board%s.reload = function() { window.location.reload(); };
+
+                ]], options.uuid, options.uuid, options.uuid, options.uuid)
+            end
+
             loadBase64Files()
             if not options.src_jxg:match("^http") then options.src_jxg = JSXGRAPH_BASE64 end
             if options.src_css ~= '' then options.src_css = CSS_BASE64 end
@@ -520,18 +530,18 @@ function Pandoc(doc)
         iframe_id = nil,
         width = nil,
         height = nil,
-        aspect_ratio="1/1",
-        out='js',
-        dom='chrome',
-        textwidth='20cm',
-        style='border:1px solid black; border-radius:10px;',
-        class='',
-        echo=false,
-        unit='px',
-        reload=false,
-        src_jxg=joinPath(extension_dir,"resources","js","jsxgraphcore.js"),
-        src_css=joinPath(extension_dir,"resources","css","jsxgraph.css"),
-        src_mjx='https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-svg.js'
+        aspect_ratio = "1/1",
+        out = 'js',
+        dom = 'chrome',
+        textwidth = '20cm',
+        style = 'border:1px solid black; border-radius:10px;',
+        class = '',
+        echo = false,
+        unit = 'px',
+        reload = false,
+        src_jxg = joinPath(extension_dir,"resources","js","jsxgraphcore.js"),
+        src_css = joinPath(extension_dir,"resources","css","jsxgraph.css"),
+        src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-svg.js'
     }
 
     local globalOptions = doc.meta["jsxgraph"]
