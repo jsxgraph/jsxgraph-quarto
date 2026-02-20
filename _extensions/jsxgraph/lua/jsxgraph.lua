@@ -11,7 +11,7 @@ local EXTENSION_NAME = "JSXGraph"
 
 local svg_counter = 0
 
-local script_path = PANDOC_SCRIPT_FILE
+local script_path = debug.getinfo(1, "S").source:sub(2)
 local lua_dir = pandoc.path.directory(script_path)
 local extension_dir = pandoc.path.directory(lua_dir)
 
@@ -48,10 +48,18 @@ end
 -- Read file.
 
 local function ioRead(file)
-    local ioFile = io.open(file, "r")
-    local ioContent = ioFile:read("*a")
+    --    local ioFile = io.open(file, "r")
+    --    local ioContent = ioFile:read("*a")
+    --    ioFile:close()
+    --    return ioContent
+    local ioFile, err = io.open(file, "r")
+    if not ioFile then
+        error("Cannot open file: " .. file .. "\n" .. (err or "unknown error"))
+    end
+
+    local content = ioFile:read("*a")
     ioFile:close()
-    return ioContent
+    return content
 end
 
 -- Write file.
@@ -295,17 +303,17 @@ local function render_jsxgraph(globalOptions)
                 local node_cmd = ''
 
                 node_cmd = string.format(
-                    "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q src_mjx=%q src_css=%q dom=%q unit=%q textwidth=%q uuid=%q",
-                    options['width'],
-                    options['height'],
-                    options['style'],
-                    options['src_jxg'],
-                    options['src_mjx'],
-                    options['src_css'],
-                    options['dom'],
-                    options['unit'],
-                    options['textwidth'],
-                    id -- uuid
+                        "node " .. file_node_path .. " " .. file_svg_path .. " width=%q height=%q style=%q src_jxg=%q src_mjx=%q src_css=%q dom=%q unit=%q textwidth=%q uuid=%q",
+                        options['width'],
+                        options['height'],
+                        options['style'],
+                        options['src_jxg'],
+                        options['src_mjx'],
+                        options['src_css'],
+                        options['dom'],
+                        options['unit'],
+                        options['textwidth'],
+                        id -- uuid
                 )
 
                 --quarto.log.output(node_cmd)
