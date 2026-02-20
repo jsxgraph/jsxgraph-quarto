@@ -482,8 +482,6 @@ board%s.reload = function() { window.location.reload(); };
                 ]], options.uuid, options.uuid, options.uuid, options.uuid)
             end
 
-            quarto.log.output(jsxgraph)
-
             loadBase64Files()
             if not options.src_jxg:match("^http") then options.src_jxg = JSXGRAPH_BASE64 end
             if options.src_css ~= '' then options.src_css = CSS_BASE64 end
