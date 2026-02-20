@@ -77,11 +77,6 @@ local function getTempDir()
     return TEMP_DIR
 end
 
--- Remove file without checking existence
-local function removeFile(path)
-    os.remove(path)
-end
-
 -- UUID generator
 math.randomseed(os.time())
 local function uuid()
@@ -290,7 +285,7 @@ if (unit === "%%") {
             ]]) .. jsxgraph .. string.format([[
     }, uuid);
 
-    const svgBoard = await page.evaluate((uuid) => {
+    const svgContent = await page.evaluate((uuid) => {
         const board = Object.values(JXG.boards)
             .find(b => b.container === uuid);
         if (!board) return null;
@@ -315,12 +310,12 @@ if (unit === "%%") {
     }, uuid);
 
     createSvg({
-        innerContent: svgBoard,
+        innerContent: svgContent,
         width: parseFloat(width),
         height: parseFloat(height),
         unit: unit,
         svgFilename: svgFilename,
-        backgroundColor: "none", //(dom == 'chrome') ? '#afa' : '#faa',
+        backgroundColor: "none",
         borderWidth: parseFloat(boardOptions['borderWidth']),
         borderRadius: parseFloat(boardOptions['borderRadius'])
     })
