@@ -318,7 +318,7 @@ if (unit === "%%") {
             fontSize: 12,
             frozen: true,
             fixed: false,
-            cssstyle: 'padding: 5px;'
+            cssstyle: 'padding: 3px;'
         });
 
         function decodeDataURI(dataURI) {
