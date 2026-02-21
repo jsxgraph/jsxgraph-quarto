@@ -315,8 +315,7 @@ if (unit === "%%") {
             color: '#999',
             anchorX: 'right',
             anchorY: 'bottom',
-            padding: "10px",
-            fontSize: 12,
+            fontSize: 10px,
             frozen: true,
             fixed: false
         });
