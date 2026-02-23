@@ -219,11 +219,12 @@ async function main() {
             headless: "new",
             protocolTimeout: 60000,
             args: [
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--no-first-run',
-                '--no-zygote'
+               '--disable-setuid-sandbox',
+               '--disable-dev-shm-usage',
+               '--disable-gpu',
+               '--no-first-run',
+               '--no-zygote',
+               '--no-sandbox'
             ]
         });
         const page = await browser.newPage();
@@ -318,6 +319,7 @@ if (unit === "%%") {
             fontSize: 12,
             frozen: true,
             fixed: false,
+            display: 'internal',
             cssstyle: 'padding: 3px;'
         });
 
