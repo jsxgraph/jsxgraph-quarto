@@ -195,6 +195,8 @@ local function renderJsxgraph(globalOptions)
 
             local import_js
             local browser
+            local pdfexport
+
             if(options.dom ~= 'chrome') then
                 import_js = string.format([[
 import { chromium } from "playwright";
@@ -203,10 +205,15 @@ import { chromium } from "playwright";
 
 async function main() {
     const browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({
+    let context = await browser.newContext({
         viewport: { width: parseInt(width), height: parseInt(height) }
     });
     const page = await context.newPage();
+                ]])
+                pdfexport = string.format([[
+    context = await browser.newContext({
+        viewport: { width: parseInt(width), height: parseInt(height) }
+    });
                 ]])
             else
                 import_js = string.format([[
@@ -229,7 +236,10 @@ async function main() {
         });
         const page = await browser.newPage();
         await page.setViewport({width: parseInt(width), height: parseInt(height)});
-            ]])
+                ]])
+                pdfexport = string.format([[
+        await page.setViewport({ width: Math.ceil(pdfWidthPx), height: Math.ceil(pdfHeightPx) });
+                ]])
             end
 
             local content_node = import_js .. string.format([[
@@ -249,8 +259,10 @@ let unit = "%s";
 let textwidth = "%s";
 let svgFilename = "%s";
 let reload = "%s";
+let format = "%s";
 
-            ]], options.width, options.height, options.style, options.src_jxg, options.dom, options.src_mjx, options.src_css, options.uuid, options.unit, options.textwidth, file_svg_path, options.reload) .. string.format([[
+            ]], options.width, options.height, options.style, options.src_jxg, options.dom, options.src_mjx, options.src_css, options.uuid, options.unit, options.textwidth, file_svg_path, options.reload, FORMAT) .. string.format([[
+
 function getUnit(value) {
     const match = value.toString().match(/[a-z%%]+$/i);
     return match ? match[0] : '';
@@ -258,6 +270,20 @@ function getUnit(value) {
 function getNumber(value) {
     const match = value.toString().match(/^[\d.]+/);
     return match ? parseFloat(match[0]) : 0;
+}
+
+function toPx(value) {
+    const num = getNumber(value);
+    switch(unit) {
+        case "px": return num;
+        case "em": return num * 16;       // 1em = 16px
+        case "rem": return num * 16;
+        case "pt": return num * (96/72);  // 1pt = 1/72in, 1in = 96px
+        case "cm": return num * 37.795275591;
+        case "mm": return num * 3.779527559;
+        case "in": return num * 96;
+        default: return num;
+    }
 }
 
 let textUnit = getUnit(textwidth);
@@ -270,6 +296,7 @@ if (unit === "%%") {
     height = ((heightNum / 100) * textNum).toFixed(4);
     unit = textUnit;
 }
+
             ]]) .. browser .. string.format([[
 
     await page.setContent(`
@@ -339,17 +366,36 @@ if (unit === "%%") {
         }
     }, uuid);
 
-    createSvg({
-        innerContent: svgContent,
-        width: parseFloat(width),
-        height: parseFloat(height),
-        unit: unit,
-        svgFilename: svgFilename,
-        backgroundColor: "none",
-        borderWidth: parseFloat(boardOptions['borderWidth']),
-        borderRadius: parseFloat(boardOptions['borderRadius'])
-    })
-    ;
+    await page.waitForFunction(() => Object.values(JXG.boards).length > 0);
+    await new Promise(r => setTimeout(r, 300));
+
+    if (format === 'pdf' || format === 'latex') {
+        const pdfWidthPx = toPx(width);
+        const pdfHeightPx = toPx(height);
+
+                ]]) .. pdfexport .. string.format([[
+
+        let pdfFileName = svgFilename + ".pdf";
+        await page.pdf({
+            path: pdfFileName,
+            width: pdfWidthPx + "px",
+            height: pdfHeightPx + "px",
+            printBackground: false,
+            margin: { top: 0, right: 0, bottom: 0, left: 0 },
+            preferCSSPageSize: true
+        });
+    } else {
+        createSvg({
+            innerContent: svgContent,
+            width: parseFloat(width),
+            height: parseFloat(height),
+            unit: unit,
+            svgFilename: svgFilename,
+            backgroundColor: "none",
+            borderWidth: parseFloat(boardOptions['borderWidth']),
+            borderRadius: parseFloat(boardOptions['borderRadius'])
+        });
+    }
     await browser.close();
 }
 
@@ -405,17 +451,7 @@ function createSvg({
     const br = parseFloat(borderRadius);
     const p = parseFloat(padding);
 
-    let factor = 1;
-    switch(unit) {
-        case "px": factor = 1; break;
-        case "em": factor = 16; break;
-        case "rem": factor = 16; break;
-        case "cm": factor = 37.7952755906; break;
-        case "mm": factor = 3.7795275591; break;
-        case "in": factor = 96; break;
-        case "pt": factor = 96/72; break;
-        default: factor = 1; break;
-    }
+    let factor = toPx(1);
 
     const svgWidthPx = wNum * factor + 2 * bw + 2 * p;
     const svgHeightPx = hNum * factor + 2 * bw + 2 * p;
@@ -483,7 +519,14 @@ function createSvg({
 
             runNode(node_cmd)
 
-            local img = pandoc.Image({}, file_svg_path, "")
+            local img
+
+            if FORMAT == "pdf" or FORMAT == "latex" then
+                img = pandoc.Image({}, file_svg_path .. ".pdf", "")
+            else
+                img = pandoc.Image({}, file_svg_path, "")
+            end
+
             local svg_code = pandoc.Para({img})
 
             if options.echo then
