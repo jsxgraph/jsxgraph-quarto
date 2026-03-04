@@ -184,7 +184,7 @@ local function renderJsxgraph(globalOptions)
 
         if out == 'svg' then
             local temp_dir = getTempDir()
-            local prefix = "file_" .. svg_counter .. "_"
+            local prefix = "file_" .. id .. "_"
             local file_node_path = joinPath(temp_dir, prefix .. "code_node_board.mjs")
             local file_svg_path = joinPath(temp_dir, prefix .. "board.svg")
 
