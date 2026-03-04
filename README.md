@@ -89,22 +89,23 @@ filters:
 
 ## Attributes
 
-| Attribute      | Description                                                                       | Default  |
-|----------------|-----------------------------------------------------------------------------------|----------|
-| `aspect_ratio` | Sets the `width`-to-`height` ratio.                                               | `1/1`    |
-| `class`        | Adds a CSS class to the `<iframe>`.                                               | `none`   |
-| `dom`          | DOM generator for `svg`: `chrome` or`playwright`.                                 | `chrome` |
-| `echo`         | Displays the JSXGraph source code.                                                | `false`  |
-| `height`       | Height in pixels (e.g. `500`).                                                    | —        |
-| `iframe_id`    | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.      | —        |
-| `out`          | Static export with `svg`; interactive html export with `js`. | `js`     |
-| `reload`       | Shows a reload button.                                      | `false`  |
-| `src_css`      | Path to `jsxgraph.css`.                                                           | —        |
-| `src_jxg`      | Path to `jsxgraphcore.js`.                                                        | —        |
-| `src_mjx`      | Path to the MathJax file.                                                         | —        |
-| `style`        | Custom CSS (e.g. `border: 5px solid red; border-radius: 10px;`).                  | `none`   |
-| `unit`         | Unit for `width`and `height` (e.g. `px`, `em`, `rem`, `cm`, `mm`, `in`, `pt`).    | `px`     |
-| `width`        | Width in pixels (e.g. `500`).                                                     | —    |
+| Attribute      | Description                                                                    | Default  |
+|----------------|--------------------------------------------------------------------------------|----------|
+| `aspect_ratio` | Sets the `width`-to-`height` ratio.                                            | `1/1`    |
+| `class`        | Adds a CSS class to the `<iframe>`.                                            | `none`   |
+| `dom`          | DOM generator for `svg`: `chrome` or`playwright`.                              | `chrome` |
+| `echo`         | Displays the JSXGraph source code.                                             | `false`  |
+| `height`       | Height in pixels (e.g. `500`).                                                 | —        |
+| `iframe_id`    | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.   | —        |
+| `out`          | Static export with `svg`; interactive html export with `js`.                   | `js`     |
+| `reload`       | Shows a reload button.                                                         | `false`  |
+| `src_css`      | Path to `jsxgraph.css`.                                                        | —        |
+| `src_jxg`      | Path to `jsxgraphcore.js`.                                                     | —        |
+| `src_mjx`      | Path to the MathJax file.                                                      | —        |
+| `style`        | Custom CSS (e.g. `border: 5px solid red; border-radius: 10px;`).               | `none`   |
+| `textwidth`    | Absolute textwidth  (e.g. `15.5cm`, `5in`).                                    | `20cm`   |
+| `unit`         | Unit for `width`and `height` (e.g. `px`, `em`, `rem`, `cm`, `mm`, `in`, `pt`). | `px`     |
+| `width`        | Width in pixels (e.g. `500`).                                                  | —        |
 
 ---
 
