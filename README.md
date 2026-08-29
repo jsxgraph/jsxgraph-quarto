@@ -96,6 +96,7 @@ filters:
 | `dom`          | DOM generator for `svg`: `chrome` or`playwright`.                              | `chrome` |
 | `echo`         | Displays the JSXGraph source code.                                             | `false`  |
 | `height`       | Height in pixels (e.g. `500`).                                                 | —        |
+| `assessment_id`| Gives the iframe and assessment protocol a stable identifier.                  | generated |
 | `iframe_id`    | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.   | —        |
 | `out`          | Static export with `svg`; interactive html export with `js`.                   | `js`     |
 | `reload`       | Shows a reload button.                                                         | `false`  |
@@ -123,6 +124,45 @@ var f = board.create('functiongraph', ['x^2']);
 ```
 ````
 
+
+
+## Assessment bridge
+
+Interactive boards can expose any JSON-serializable response to a parent page
+such as an exercise or learning-management extension. Give the block a stable
+`assessment_id` and register a response provider:
+
+````markdown
+```{.jsxgraph assessment_id="my-board"}
+var board = JXG.JSXGraph.initBoard(BOARDID, {axis: true});
+var point = board.create('point', [0, 0]);
+
+JXG.QuartoAssessment.register({
+  board: board,
+  response: function () {
+    return {point: [point.X(), point.Y()]};
+  },
+  ai: {
+    render: true,
+    summary: function (data) {
+      return {point: data.point};
+    }
+  }
+});
+```
+````
+
+`response` may return any JSON-serializable value or a Promise. The optional
+`ai.summary` provides a smaller textual representation, while
+`ai.render: true` returns a PNG of the current board for vision-capable
+consumers.
+
+The sandboxed iframe communicates with its parent through `postMessage` using
+protocol `jsxgraph-quarto-assessment`, version 1. Requests and responses are
+correlated by `assessmentId` and `requestId`; the iframe accepts requests only
+from its parent window. The parent application remains responsible for
+validating responses, enforcing timeouts and size limits, and deciding whether
+AI-oriented data may leave the browser.
 
 ## Demo
 
