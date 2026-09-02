@@ -73,3 +73,21 @@ JXG.QuartoAssessment.register({
 });
 ```
 
+## Construct a graph with the reusable editor
+
+This board starts empty. Click the canvas to add vertices, then click two
+vertices to add or remove their edge.
+
+```{.jsxgraph assessment_id="graph-assessment" width="800" height="520"}
+var graphEditor = JXG.QuartoGraphEditor.createBoard();
+graphEditor.register({
+  ai: {
+    render: true,
+    summary: function (data) {
+      return JXG.QuartoGraphEditor.summarize(data, {
+        feedbackPolicy: 'Discuss the graph structure without completing the construction.'
+      });
+    }
+  }
+});
+```

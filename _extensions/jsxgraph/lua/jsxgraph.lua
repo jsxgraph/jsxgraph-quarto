@@ -139,6 +139,7 @@ end
 -- Cache Base64 for speed
 local JSXGRAPH_BASE64
 local CSS_BASE64
+local GRAPH_EDITOR_JS
 local function loadBase64Files()
     if not JSXGRAPH_BASE64 then JSXGRAPH_BASE64 = 'data:text/javascript;base64,' .. quarto.base64.encode(ioRead(joinPath(extension_dir,"resources","js","jsxgraphcore.js"))) end
     if not CSS_BASE64 then CSS_BASE64 = 'data:text/css;base64,' .. quarto.base64.encode(ioRead(joinPath(extension_dir,"resources","css","jsxgraph.css"))) end
@@ -547,11 +548,17 @@ board%s.reload = function() { window.location.reload(); };
                 ]], options.uuid, options.uuid, options.uuid, options.uuid)
             end
 
-            loadBase64Files()
+            if not options.src_jxg:match("^http") or
+               (options.src_css ~= '' and not options.src_css:match("^http")) then
+                loadBase64Files()
+            end
             if not options.src_jxg:match("^http") then options.src_jxg = JSXGRAPH_BASE64 end
-            if options.src_css ~= '' then options.src_css = CSS_BASE64 end
+            if options.src_css ~= '' and not options.src_css:match("^http") then options.src_css = CSS_BASE64 end
 
             local assessment_id = options.assessment_id or options.iframe_id or id
+            if not GRAPH_EDITOR_JS then
+                GRAPH_EDITOR_JS = ioRead(joinPath(extension_dir, "graph-editor.js"))
+            end
             local assessment_bridge = string.format([[
 (function () {
   'use strict';
@@ -585,6 +592,33 @@ board%s.reload = function() { window.location.reload(); };
     return boards.length ? boards[0] : null;
   }
 
+  function refreshBoards() {
+    Object.values(JXG.boards || {}).forEach((board) => {
+      const container = board.containerObj;
+      if (!container) return;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (!(width > 0 && height > 0)) return;
+      if (typeof board.resizeContainer === 'function' &&
+          (Math.abs((board.canvasWidth || 0) - width) > 1 ||
+           Math.abs((board.canvasHeight || 0) - height) > 1)) {
+        board.resizeContainer(width, height);
+      }
+      if (typeof board.fullUpdate === 'function') board.fullUpdate();
+      else if (typeof board.update === 'function') board.update();
+    });
+  }
+
+  function scheduleBoardRefresh() {
+    refreshBoards();
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => {
+        refreshBoards();
+        requestAnimationFrame(refreshBoards);
+      });
+    }
+  }
+
   JXG.QuartoAssessment = {
     register(spec) {
       registration = typeof spec === 'function' ? { response: spec } : spec;
@@ -597,8 +631,12 @@ board%s.reload = function() { window.location.reload(); };
   window.addEventListener('message', async (event) => {
     const message = event.data;
     if (event.source !== window.parent || !message || message.protocol !== protocol ||
-        message.version !== version || message.type !== 'request' ||
-        message.assessmentId !== assessmentId) return;
+        message.version !== version || message.assessmentId !== assessmentId) return;
+    if (message.type === 'layout') {
+      scheduleBoardRefresh();
+      return;
+    }
+    if (message.type !== 'request') return;
 
     const reply = {
       protocol,
@@ -631,9 +669,9 @@ board%s.reload = function() { window.location.reload(); };
     }
     window.parent.postMessage(reply, '*');
   });
+  window.addEventListener('resize', scheduleBoardRefresh);
 })();
 ]], assessment_id)
-
 
             local icontent = string.format([[
 <!DOCTYPE html>
@@ -649,8 +687,9 @@ board%s.reload = function() { window.location.reload(); };
 <div id="%s" class="jxgbox" style="width:100%%;height:100%%;display:block;object-fit:fill;box-sizing:border-box;"></div>
 <script>%s</script>
 <script>%s</script>
+<script>%s</script>
 </body>
-</html>]], options.src_mjx, options.src_jxg, options.src_css, id, assessment_bridge, jsxgraph)
+</html>]], options.src_mjx, options.src_jxg, options.src_css, id, assessment_bridge, GRAPH_EDITOR_JS, jsxgraph)
 
             local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(icontent)
             local iframe = '<iframe src="'..jsx_b64..'" class="'..options.class..'" name="iframe'..id..'"'
@@ -690,8 +729,8 @@ function Pandoc(doc)
         echo = false,
         unit = 'px',
         reload = false,
-        src_jxg = joinPath(extension_dir,"resources","js","jsxgraphcore.js"),
-        src_css = joinPath(extension_dir,"resources","css","jsxgraph.css"),
+        src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
+        src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-svg.js'
     }
 
