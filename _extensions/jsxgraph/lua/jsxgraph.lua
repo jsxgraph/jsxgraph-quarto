@@ -139,6 +139,7 @@ end
 -- Cache Base64 for speed
 local JSXGRAPH_BASE64
 local CSS_BASE64
+local GRAPH_EDITOR_JS
 local function loadBase64Files()
     if not JSXGRAPH_BASE64 then JSXGRAPH_BASE64 = 'data:text/javascript;base64,' .. quarto.base64.encode(ioRead(joinPath(extension_dir,"resources","js","jsxgraphcore.js"))) end
     if not CSS_BASE64 then CSS_BASE64 = 'data:text/css;base64,' .. quarto.base64.encode(ioRead(joinPath(extension_dir,"resources","css","jsxgraph.css"))) end
@@ -547,9 +548,130 @@ board%s.reload = function() { window.location.reload(); };
                 ]], options.uuid, options.uuid, options.uuid, options.uuid)
             end
 
-            loadBase64Files()
+            if not options.src_jxg:match("^http") or
+               (options.src_css ~= '' and not options.src_css:match("^http")) then
+                loadBase64Files()
+            end
             if not options.src_jxg:match("^http") then options.src_jxg = JSXGRAPH_BASE64 end
-            if options.src_css ~= '' then options.src_css = CSS_BASE64 end
+            if options.src_css ~= '' and not options.src_css:match("^http") then options.src_css = CSS_BASE64 end
+
+            local assessment_id = options.assessment_id or options.iframe_id or id
+            if not GRAPH_EDITOR_JS then
+                GRAPH_EDITOR_JS = ioRead(joinPath(extension_dir, "graph-editor.js"))
+            end
+            local assessment_bridge = string.format([[
+(function () {
+  'use strict';
+  const protocol = 'jsxgraph-quarto-assessment';
+  const version = 1;
+  const assessmentId = %q;
+  let registration = null;
+
+  async function svgToPng(dataUri, board) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(board.canvasWidth || image.width || 800));
+        canvas.height = Math.max(1, Math.round(board.canvasHeight || image.height || 600));
+        const context = canvas.getContext('2d');
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      image.onerror = () => reject(new Error('Could not render the JSXGraph board'));
+      image.src = dataUri;
+    });
+  }
+
+  function resolveBoard(spec) {
+    if (spec && typeof spec.board === 'function') return spec.board();
+    if (spec && spec.board) return spec.board;
+    const boards = Object.values(JXG.boards || {});
+    return boards.length ? boards[0] : null;
+  }
+
+  function refreshBoards() {
+    Object.values(JXG.boards || {}).forEach((board) => {
+      const container = board.containerObj;
+      if (!container) return;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (!(width > 0 && height > 0)) return;
+      if (typeof board.resizeContainer === 'function' &&
+          (Math.abs((board.canvasWidth || 0) - width) > 1 ||
+           Math.abs((board.canvasHeight || 0) - height) > 1)) {
+        board.resizeContainer(width, height);
+      }
+      if (typeof board.fullUpdate === 'function') board.fullUpdate();
+      else if (typeof board.update === 'function') board.update();
+    });
+  }
+
+  function scheduleBoardRefresh() {
+    refreshBoards();
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => {
+        refreshBoards();
+        requestAnimationFrame(refreshBoards);
+      });
+    }
+  }
+
+  JXG.QuartoAssessment = {
+    register(spec) {
+      registration = typeof spec === 'function' ? { response: spec } : spec;
+      if (!registration || typeof registration.response !== 'function') {
+        throw new TypeError('Assessment registration requires a response function');
+      }
+    }
+  };
+
+  window.addEventListener('message', async (event) => {
+    const message = event.data;
+    if (event.source !== window.parent || !message || message.protocol !== protocol ||
+        message.version !== version || message.assessmentId !== assessmentId) return;
+    if (message.type === 'layout') {
+      scheduleBoardRefresh();
+      return;
+    }
+    if (message.type !== 'request') return;
+
+    const reply = {
+      protocol,
+      version,
+      type: 'response',
+      assessmentId,
+      requestId: message.requestId
+    };
+    try {
+      if (!registration) throw new Error('No JSXGraph assessment response is registered');
+      const raw = await registration.response();
+      reply.payload = JSON.parse(JSON.stringify(raw));
+      if (message.includeAI && registration.ai) {
+        const aiSpec = registration.ai;
+        const summary = typeof aiSpec.summary === 'function'
+          ? await aiSpec.summary(reply.payload)
+          : aiSpec.summary;
+        reply.ai = {};
+        if (summary !== undefined) reply.ai.summary = summary;
+        if (aiSpec.render) {
+          const board = resolveBoard(registration);
+          if (!board || !board.renderer || typeof board.renderer.dumpToDataURI !== 'function') {
+            throw new Error('No renderable JSXGraph board is available');
+          }
+          reply.ai.image = await svgToPng(board.renderer.dumpToDataURI(false), board);
+        }
+      }
+    } catch (error) {
+      reply.error = error && error.message ? error.message : String(error);
+    }
+    window.parent.postMessage(reply, '*');
+  });
+  window.addEventListener('resize', scheduleBoardRefresh);
+})();
+]], assessment_id)
 
             local icontent = string.format([[
 <!DOCTYPE html>
@@ -564,8 +686,10 @@ board%s.reload = function() { window.location.reload(); };
 <body>
 <div id="%s" class="jxgbox" style="width:100%%;height:100%%;display:block;object-fit:fill;box-sizing:border-box;"></div>
 <script>%s</script>
+<script>%s</script>
+<script>%s</script>
 </body>
-</html>]], options.src_mjx, options.src_jxg, options.src_css, id, jsxgraph)
+</html>]], options.src_mjx, options.src_jxg, options.src_css, id, assessment_bridge, GRAPH_EDITOR_JS, jsxgraph)
 
             local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(icontent)
             local iframe = '<iframe src="'..jsx_b64..'" class="'..options.class..'" name="iframe'..id..'"'
@@ -574,7 +698,7 @@ board%s.reload = function() { window.location.reload(); };
             else
                 iframe = iframe .. ' style="width:'..options.width..options.unit..'; height:'..options.height..options.unit..'; position:relative; margin:0; padding:0; display:block; z-index:1;'..options.style..';"'
             end
-            if options.iframe_id then iframe = iframe .. ' id="'..options.iframe_id..'"' end
+            iframe = iframe .. ' id="'..assessment_id..'"'
             iframe = iframe..' sandbox="allow-scripts"></iframe>'
 
             local html_code = pandoc.RawBlock("html", iframe)
@@ -593,6 +717,7 @@ end
 function Pandoc(doc)
     local options = {
         iframe_id = nil,
+        assessment_id = nil,
         width = nil,
         height = nil,
         aspect_ratio = "1/1",
@@ -604,8 +729,8 @@ function Pandoc(doc)
         echo = false,
         unit = 'px',
         reload = false,
-        src_jxg = joinPath(extension_dir,"resources","js","jsxgraphcore.js"),
-        src_css = joinPath(extension_dir,"resources","css","jsxgraph.css"),
+        src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
+        src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-svg.js'
     }
 
