@@ -15,6 +15,8 @@
 - Interactive **JSXGraph boards** for `html` and `revealjs`.
 - **Static SVG export** for `pdf` and `docx`.
 - Full control over `<iframe>` layout, style, and source code display.
+- A generic JSON assessment bridge for exercise and LMS integrations.
+- A reusable free-placement editor for simple undirected graphs.
 - Works **globally** or **per page** in your Quarto project.
 
 ---
@@ -32,7 +34,8 @@ quarto add jsxgraph/jsxgraph-quarto
 **Manually**
 
 1. Create `_extensions/jsxgraph` in your project folder.
-2. Copy `_extension.yml` and folder `lua` and `resources` into `_extensions/jsxgraph`.
+2. Copy `_extension.yml`, `graph-editor.js`, and the `lua` and `resources`
+   folders into `_extensions/jsxgraph`.
 
 ---
 
@@ -96,11 +99,12 @@ filters:
 | `dom`          | DOM generator for `svg`: `chrome` or`playwright`.                              | `chrome` |
 | `echo`         | Displays the JSXGraph source code.                                             | `false`  |
 | `height`       | Height in pixels (e.g. `500`).                                                 | —        |
+| `assessment_id`| Gives the iframe and assessment protocol a stable identifier.                  | generated |
 | `iframe_id`    | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.   | —        |
 | `out`          | Static export with `svg`; interactive html export with `js`.                   | `js`     |
 | `reload`       | Shows a reload button.                                                         | `false`  |
-| `src_css`      | Path to `jsxgraph.css`.                                                        | —        |
-| `src_jxg`      | Path to `jsxgraphcore.js`.                                                     | —        |
+| `src_css`      | URL or local path to `jsxgraph.css`.                                          | jsDelivr |
+| `src_jxg`      | URL or local path to `jsxgraphcore.js`.                                       | jsDelivr |
 | `src_mjx`      | Path to the MathJax file.                                                      | —        |
 | `style`        | Custom CSS (e.g. `border: 5px solid red; border-radius: 10px;`).               | `none`   |
 | `textwidth`    | Absolute textwidth  (e.g. `15.5cm`, `5in`).                                    | `20cm`   |
@@ -123,6 +127,85 @@ var f = board.create('functiongraph', ['x^2']);
 ```
 ````
 
+
+
+## Assessment bridge
+
+Interactive boards can expose any JSON-serializable response to a parent page
+such as an exercise or learning-management extension. Give the block a stable
+`assessment_id` and register a response provider:
+
+````markdown
+```{.jsxgraph assessment_id="my-board"}
+var board = JXG.JSXGraph.initBoard(BOARDID, {axis: true});
+var point = board.create('point', [0, 0]);
+
+JXG.QuartoAssessment.register({
+  board: board,
+  response: function () {
+    return {point: [point.X(), point.Y()]};
+  },
+  ai: {
+    render: true,
+    summary: function (data) {
+      return {point: data.point};
+    }
+  }
+});
+```
+````
+
+`response` may return any JSON-serializable value or a Promise. The optional
+`ai.summary` provides a smaller textual representation, while
+`ai.render: true` returns a PNG of the current board for vision-capable
+consumers.
+
+The sandboxed iframe communicates with its parent through `postMessage` using
+protocol `jsxgraph-quarto-assessment`, version 1. Requests and responses are
+correlated by `assessmentId` and `requestId`; the iframe accepts requests only
+from its parent window. The parent application remains responsible for
+validating responses, enforcing timeouts and size limits, and deciding whether
+AI-oriented data may leave the browser.
+
+The same protocol accepts a `layout` notification from the parent. This
+refreshes all boards after a hidden or collapsed iframe becomes visible, so
+JSXGraph can recompute its canvas dimensions. See the complete request,
+response, error, AI-data, and layout protocol in
+[the graph editor and assessment API reference](docs/graph-editor.md).
+
+## Graph editor
+
+`JXG.QuartoGraphEditor` builds an empty, free-placement editor for simple
+undirected graphs:
+
+````markdown
+```{.jsxgraph assessment_id="graph-answer" width="800" height="520"}
+var editor = JXG.QuartoGraphEditor.createBoard();
+editor.register({
+  ai: {
+    render: true,
+    summary: function (data) {
+      return JXG.QuartoGraphEditor.summarize(data);
+    }
+  }
+});
+```
+````
+
+Students click empty space to add vertices, click two vertices to toggle their
+edge, and drag vertices to reposition them. The editor serializes stable vertex
+IDs, coordinates, and an edge list. It also provides deterministic topology
+summaries for feedback systems. The full API, response schema, customization
+options, and host integration contract are documented in
+[docs/graph-editor.md](docs/graph-editor.md).
+
+## Asset loading
+
+Interactive output uses the jsDelivr JSXGraph JavaScript and CSS URLs by
+default. A project can set `src_jxg` and `src_css` to other HTTP(S) URLs, which
+are preserved as supplied, or to local paths, which are embedded as data URLs.
+The bundled resources therefore remain available for self-contained or offline
+projects when selected explicitly.
 
 ## Demo
 
