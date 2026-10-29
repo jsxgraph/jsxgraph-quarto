@@ -98,8 +98,11 @@
     }, options.edgeAttributes);
     var normalStyle = merge({ fillColor: '#2563eb', strokeColor: '#1d4ed8' }, options.normalStyle);
     var selectedStyle = merge({ fillColor: '#f59e0b', strokeColor: '#92400e' }, options.selectedStyle);
-    var bounds = board.getBoundingBox();
-    var editableBottom = options.editableBottom === undefined ? bounds[3] + 0.9 : Number(options.editableBottom);
+    // Read the view when a click happens: a board started while hidden has no
+    // valid view yet, and resizing may change it.
+    function editableBottom() {
+      return options.editableBottom === undefined ? board.getBoundingBox()[3] + 0.9 : Number(options.editableBottom);
+    }
     var vertices = [];
     var edges = [];
     var selectedVertex = null;
@@ -286,7 +289,8 @@
     function userPosition(screen) {
       var width = board.containerObj.clientWidth || board.canvasWidth;
       var height = board.containerObj.clientHeight || board.canvasHeight;
-      if (Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0) {
+      var bounds = board.getBoundingBox();
+      if (Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0 && bounds.every(Number.isFinite)) {
         return [
           bounds[0] + screen[0] / width * (bounds[2] - bounds[0]),
           bounds[1] - screen[1] / height * (bounds[1] - bounds[3])
@@ -319,7 +323,7 @@
           handleVertexClick(pointerStart.vertex);
         } else if (!vertexAt(screen)) {
         var position = userPosition(screen);
-        if (position[1] > editableBottom) addVertex(position[0], position[1]);
+        if (position[1] > editableBottom()) addVertex(position[0], position[1]);
         }
       }
       pointerStart = null;
@@ -369,7 +373,9 @@
       if (!(width > 0 && height > 0) || typeof board.resizeContainer !== 'function') return false;
       if (Math.abs((board.canvasWidth || 0) - width) > 1 ||
           Math.abs((board.canvasHeight || 0) - height) > 1) {
-        board.resizeContainer(width, height);
+        // Keep the container fluid (CSS size): fixing it in px would stop it
+        // following the iframe on narrow screens.
+        board.resizeContainer(width, height, true);
         if (typeof board.fullUpdate === 'function') board.fullUpdate();
       }
       return true;

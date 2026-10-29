@@ -1,0 +1,26 @@
+{
+  "v": 2,
+  "repository": "jsxgraph/jsxgraph",
+  "tag": "v1.14.2",
+  "commit": "ecc97f951ad0ed2acfffbad68706e40683635721",
+  "runtimeVersion": "1.14.2",
+  "npm": {
+    "package": "jsxgraph",
+    "version": "1.14.2",
+    "tarball": "https://registry.npmjs.org/jsxgraph/-/jsxgraph-1.14.2.tgz",
+    "integrity": "sha512-OqhkRB5Qcp8dxe5ff9qdG1v/4yLrw2HDcApBoeZWRa3IzLSdIA8TXPwjspsM1XvEcV/eTPwsUFe1aiYejV2TLw=="
+  },
+  "sources": {
+    "resources/js/jsxgraphcore.js": "package/distrib/jsxgraphcore.js",
+    "resources/css/jsxgraph.css": "package/distrib/jsxgraph.css",
+    "resources/upstream/LICENSE.MIT": "package/LICENSE.MIT",
+    "resources/upstream/LICENSE.LGPL": "package/LICENSE.LGPL"
+  },
+  "files": {
+    "resources/js/jsxgraphcore.js": "7cd005c139b63c5e2562df08dc5fe7c813b0c40438054941564a3453b4edd9b0",
+    "resources/css/jsxgraph.css": "6b2ec1a1f794afbfe0677a921b2314765f0e5fc9773196ac4a4f8f6cc257fc3f",
+    "resources/upstream/LICENSE.MIT": "43e325001487de7f09745fbe086b054bb1b70d4ab58060e87153849365b23ff1",
+    "resources/upstream/LICENSE.LGPL": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+  },
+  "recipe": "scripts/fetch-upstream-runtime.py"
+}

@@ -130,8 +130,6 @@ test('Lua embeds the editor and handles assessment and layout messages', () => {
   assert.match(lua, /assessment_bridge, GRAPH_EDITOR_JS, jsxgraph/);
   assert.match(lua, /message\.type !== 'request'/);
   assert.match(lua, /message\.type === 'layout'/);
-  assert.match(lua, /board\.resizeContainer\(width, height\)/);
-  assert.match(lua, /window\.addEventListener\('resize', scheduleBoardRefresh\)/);
   assert.match(lua, /src_jxg = 'https:\/\/cdn\.jsdelivr\.net/);
   assert.match(lua, /not options\.src_css:match\("\^http"\)/);
 });

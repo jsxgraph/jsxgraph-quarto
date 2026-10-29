@@ -145,6 +145,85 @@ local function loadBase64Files()
     if not CSS_BASE64 then CSS_BASE64 = 'data:text/css;base64,' .. quarto.base64.encode(ioRead(joinPath(extension_dir,"resources","css","jsxgraph.css"))) end
 end
 
+-- Pre-loader script for the interactive iframe (option src_mjx_preload)
+local PRELOAD_CACHE = {}
+
+-- Stop the render with a message. Quarto replaces the global error() by a
+-- function that only logs, so the render would go on; assert() really raises.
+local function failRender(message)
+    assert(false, message)
+end
+
+local function trim(s)
+    return (s:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+local function escapeHtmlAttribute(s)
+    return (s:gsub("&", "&amp;"):gsub('"', "&quot;"):gsub("<", "&lt;"):gsub(">", "&gt;"))
+end
+
+-- Read a file byte for byte; nil and a reason if it cannot be read
+local function readBinary(file)
+    local ioFile, err = io.open(file, "rb")
+    if not ioFile then return nil, err or "cannot open" end
+    local content, rerr = ioFile:read("*a")
+    ioFile:close()
+    if not content then return nil, rerr or "cannot read" end
+    return content
+end
+
+-- Directories searched for a relative local path: the directory of the input
+-- document first, then the project directory (when there is a project)
+local function preloadSearchDirs()
+    local dirs = {}
+    local input = quarto.doc and quarto.doc.input_file
+    if not input and PANDOC_STATE and PANDOC_STATE.input_files then input = PANDOC_STATE.input_files[1] end
+    if type(input) == "string" and input ~= "" then
+        local d = pandoc.path.directory(input)
+        if d == "" then d = "." end
+        dirs[#dirs + 1] = d
+    end
+    local project = quarto.project and quarto.project.directory
+    if type(project) == "string" and project ~= "" then dirs[#dirs + 1] = project end
+    if #dirs == 0 then dirs[1] = "." end
+    return dirs
+end
+
+-- The src of the pre-loader script: http(s) and data URLs as given, a local
+-- file embedded as a data URL. Returns nil if the option is unset or empty.
+local function resolvePreloadSrc(value)
+    if type(value) ~= "string" then return nil end
+    value = trim(value)
+    if value == "" then return nil end
+
+    local scheme = value:match("^(%a[%w+.-]+):")
+    if scheme then
+        scheme = scheme:lower()
+        if scheme == "http" or scheme == "https" or scheme == "data" then return value end
+        failRender("JSXGraph: option src_mjx_preload must be an http(s) or data URL or a local file path, not '" .. value .. "'")
+    end
+
+    local candidates = {}
+    if pandoc.path.is_absolute(value) then
+        candidates[1] = value
+    else
+        for _, dir in ipairs(preloadSearchDirs()) do
+            candidates[#candidates + 1] = pandoc.path.normalize(pandoc.path.join({dir, value}))
+        end
+    end
+
+    for _, file in ipairs(candidates) do
+        if PRELOAD_CACHE[file] then return PRELOAD_CACHE[file] end
+        local content = readBinary(file)
+        if content then
+            PRELOAD_CACHE[file] = 'data:text/javascript;base64,' .. quarto.base64.encode(content)
+            return PRELOAD_CACHE[file]
+        end
+    end
+    failRender("JSXGraph: option src_mjx_preload: cannot read the local file '" .. value ..
+          "' (looked for: " .. table.concat(candidates, ", ") .. ")")
+end
+
 -- Render JSXGraph
 local function renderJsxgraph(globalOptions)
 
@@ -178,7 +257,6 @@ local function renderJsxgraph(globalOptions)
         local jsxgraph = content.text
         jsxgraph = jsxgraph:gsub("initBoard%(%s*BOARDID%s*,", 'initBoard("jxg_box",')
         jsxgraph = jsxgraph:gsub([[initBoard%s*%(%s*(['"])[^'"]*%1%s*,]], 'initBoard("' .. id .. '",')
-
         local out = 'svg'
         if quarto.doc.is_format("html") then out = options.out end
         if isNonemptyString(options.echo) then options.echo = options.echo=="true" end
@@ -330,6 +408,8 @@ if (unit === "%%") {
         await page.addScriptTag({url: src_jxg});
     }
 
+    // BOARDID names the board's container everywhere in the code.
+    await page.evaluate((uuid) => { window.BOARDID = uuid; }, uuid);
     await page.evaluate((uuid) => {
             ]]) .. jsxgraph .. string.format([[
     }, uuid);
@@ -565,6 +645,11 @@ board%s.reload = function() { window.location.reload(); };
   const protocol = 'jsxgraph-quarto-assessment';
   const version = 1;
   const assessmentId = %q;
+  // BOARDID names the board's container everywhere in the board code (e.g.
+  // document.getElementById(BOARDID)), not only in initBoard(BOARDID, ...).
+  // Set here, so the board code is not changed ('use strict' stays first);
+  // a window property, so page code may still declare its own BOARDID.
+  window.BOARDID = %q;
   let registration = null;
 
   async function svgToPng(dataUri, board) {
@@ -592,35 +677,80 @@ board%s.reload = function() { window.location.reload(); };
     return boards.length ? boards[0] : null;
   }
 
-  function refreshBoards() {
-    Object.values(JXG.boards || {}).forEach((board) => {
-      const container = board.containerObj;
-      if (!container) return;
-      // Measure the iframe viewport, not the container: after the first
-      // resizeContainer() the container has a fixed pixel size.
-      // const width = container.clientWidth;
-      // const height = container.clientHeight;
-      const width = document.documentElement.clientWidth;
-      const height = document.documentElement.clientHeight;
-      if (!(width > 0 && height > 0)) return;
-      if (typeof board.resizeContainer === 'function' &&
-          (Math.abs((board.canvasWidth || 0) - width) > 1 ||
-           Math.abs((board.canvasHeight || 0) - height) > 1)) {
-        board.resizeContainer(width, height);
-      }
-      if (typeof board.fullUpdate === 'function') board.fullUpdate();
-      else if (typeof board.update === 'function') board.update();
-    });
-  }
-
-  function scheduleBoardRefresh() {
-    refreshBoards();
-    if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(() => {
-        refreshBoards();
-        requestAnimationFrame(refreshBoards);
-      });
+  // The extension requires JSXGraph 1.14.2 or later and has no workarounds
+  // for older versions (a src_jxg that loads one is used at the user's own risk).
+  try {
+    const v = String(JXG.version).split('.').map((n) => parseInt(n, 10));
+    if (v[0] === 1 && (v[1] < 14 || (v[1] === 14 && v[2] < 2))) {
+      console.warn('The jsxgraph Quarto extension requires JSXGraph 1.14.2 or later; this page loads ' + JXG.version + '.');
     }
+  } catch (error) { /* no version to check */ }
+
+  // JSXGraph's own ResizeObserver resizes each board with its container (a
+  // tab or collapsed block shown, a narrower window), and since 1.14.2 a
+  // board created while hidden gets the view its code asked for when shown.
+  // One gap remains (still open in 1.14.2): on resizing, JSXGraph keeps a
+  // keepaspectratio board's vertical extent and crops the sides when the
+  // container gets narrower than the box. Such a board shows the whole view
+  // its code, the user (zoom, pan) or initBoard set, fitted with one scale
+  // and centred, as initBoard does; its home button (zoom100) shows the whole
+  // initial box the same way.
+  function fit(box, width, height) {  // keeps the direction of each axis
+    const dx = box[2] - box[0], dy = box[1] - box[3];
+    const scale = Math.min(width / Math.abs(dx), height / Math.abs(dy));
+    const hx = Math.sign(dx) * width / (2 * scale), hy = Math.sign(dy) * height / (2 * scale);
+    const cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2;
+    return [cx - hx, cy + hy, cx + hx, cy - hy];
+  }
+  const finite = (box) => Array.isArray(box) && box.length === 4 && box.every(Number.isFinite);
+  const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 1e-9 * Math.max(1, Math.abs(v)));
+  function keepView(board) {
+    const proto = JXG.Board.prototype;
+    let view = board.attr.boundingbox.slice();
+    let shown = board.canvasWidth > 0 && board.canvasHeight > 0, last = board.getBoundingBox(), own = false;
+    board.setBoundingBox = function (box, keepaspectratio, setZoom) {
+      // zoom100 (the navigation bar's home button) asks for the initial box
+      // with JSXGraph's rule, which may crop it: fit it as initBoard does.
+      if (!own && keepaspectratio && setZoom === 'reset' && box === this.attr.boundingbox &&
+          this.canvasWidth > 0 && this.canvasHeight > 0) {
+        view = box.slice();
+        own = true;
+        try {
+          proto.setBoundingBox.call(this, fit(view, this.canvasWidth, this.canvasHeight), false, 'reset');
+          this.keepaspectratio = true;
+        } finally { own = false; }
+        last = this.getBoundingBox();
+        return this;
+      }
+      if (!own && finite(box)) view = box.slice();
+      proto.setBoundingBox.apply(this, arguments);
+      if (!own) last = this.getBoundingBox();
+      return this;
+    };
+    board.resizeContainer = function (w, h, dontset, dontSetBoundingBox) {
+      if (dontSetBoundingBox || !(w > 0 && h > 0) || !this.keepaspectratio) return proto.resizeContainer.apply(this, arguments);
+      const current = this.getBoundingBox();
+      if (shown && finite(current) && !same(current, last)) view = current.slice();  // panned since
+      proto.resizeContainer.call(this, w, h, dontset, true);
+      own = true;
+      try {
+        this.setBoundingBox(fit(view, w, h), false, 'keep');  // keeps the zoom factors
+        this.keepaspectratio = true;
+      } finally { own = false; }
+      shown = true;
+      last = this.getBoundingBox();
+      return this;
+    };
+  }
+  if (JXG.JSXGraph && typeof JXG.JSXGraph.initBoard === 'function') {
+    const initBoard = JXG.JSXGraph.initBoard;
+    JXG.JSXGraph.initBoard = function () {
+      const board = initBoard.apply(this, arguments);
+      try {
+        if (board.keepaspectratio && !(board.attr.unitx || board.attr.unity)) keepView(board);
+      } catch (error) { /* keep the board usable */ }
+      return board;
+    };
   }
 
   JXG.QuartoAssessment = {
@@ -636,11 +766,18 @@ board%s.reload = function() { window.location.reload(); };
     const message = event.data;
     if (event.source !== window.parent || !message || message.protocol !== protocol ||
         message.version !== version || message.assessmentId !== assessmentId) return;
-    if (message.type === 'layout') {
-      scheduleBoardRefresh();
-      return;
-    }
+    // 'layout' is still accepted, but JSXGraph's own resize observer already
+    // sizes the boards when the iframe is shown or resized: nothing to do.
+    if (message.type === 'layout') return;
     if (message.type !== 'request') return;
+    // Board code may register in a load handler: wait for the page's load
+    // event (MathJax may still be loading), at most a few seconds.
+    if (!registration && document.readyState !== 'complete') {
+      await new Promise((resolve) => {
+        window.addEventListener('load', resolve, {once: true});
+        setTimeout(resolve, 3000);
+      });
+    }
 
     const reply = {
       protocol,
@@ -673,16 +810,22 @@ board%s.reload = function() { window.location.reload(); };
     }
     window.parent.postMessage(reply, '*');
   });
-  window.addEventListener('resize', scheduleBoardRefresh);
 })();
-]], assessment_id)
+]], assessment_id, id)
+
+            -- Optional synchronous pre-loader, run before the MathJax script
+            local preload_tag = ''
+            local preload_src = resolvePreloadSrc(options.src_mjx_preload)
+            if preload_src then
+                preload_tag = '<script src="' .. escapeHtmlAttribute(preload_src) .. '"></script>\n'
+            end
 
             local icontent = string.format([[
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<script id="MathJax-script" async src="%s"></script>
+%s<script id="MathJax-script" async src="%s"></script>
 <script src="%s"></script>
 <style>@import url("%s");</style>
 <style>html,body{margin:0;padding:0;width:100%%;height:100%%;overflow:hidden;}.jxgbox{border:none;border-radius:0px;}</style>
@@ -693,7 +836,7 @@ board%s.reload = function() { window.location.reload(); };
 <script>%s</script>
 <script>%s</script>
 </body>
-</html>]], options.src_mjx, options.src_jxg, options.src_css, id, assessment_bridge, GRAPH_EDITOR_JS, jsxgraph)
+</html>]], preload_tag, options.src_mjx, options.src_jxg, options.src_css, id, assessment_bridge, GRAPH_EDITOR_JS, jsxgraph)
 
             local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(icontent)
             local iframe = '<iframe src="'..jsx_b64..'" class="'..options.class..'" name="iframe'..id..'"'
@@ -733,8 +876,10 @@ function Pandoc(doc)
         echo = false,
         unit = 'px',
         reload = false,
-        src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js',
-        src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css',
+        -- Exactly the released JSXGraph 1.14.2 that the extension requires and
+        -- bundles (the same files as the offline copy).
+        src_jxg = 'https://cdn.jsdelivr.net/npm/jsxgraph@1.14.2/distrib/jsxgraphcore.js',
+        src_css = 'https://cdn.jsdelivr.net/npm/jsxgraph@1.14.2/distrib/jsxgraph.css',
         src_mjx = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-svg.js'
     }
 

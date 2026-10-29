@@ -84,9 +84,9 @@ var editor = JXG.QuartoGraphEditor.create({board: board});
 | `register(spec)` | Registers the response with `JXG.QuartoAssessment`. |
 
 Editors made by `createBoard()` also expose `resize()`, which synchronizes
-JSXGraph with the visible container. A `ResizeObserver`, initial animation
-frames, iframe resize events, and the parent layout notification normally call
-this automatically.
+JSXGraph with the visible container. The editor's own `ResizeObserver` and
+initial animation frames call it; JSXGraph's resize observer resizes the board
+as well.
 
 ## Graph response
 
@@ -161,6 +161,12 @@ Messages use `protocol: "jsxgraph-quarto-assessment"`, `version: 1`, and the
 block's `assessment_id` (or generated iframe ID). The sandboxed iframe accepts
 messages only when `event.source === window.parent`.
 
+A board in a hidden tab or collapsed block runs its code while the page loads,
+so a request is answered while it is hidden. A board that has never been shown
+has no size yet, so its `ai.render` picture is empty. A request that arrives before the iframe's `load`
+event and finds no registration yet waits for it (at most 3 s), so a
+registration made in a load handler counts.
+
 ### Request
 
 ```json
@@ -214,7 +220,7 @@ Errors keep the same response envelope and set `error` instead of `payload`:
 
 ### Layout notification
 
-A parent that reveals, expands, or resizes an iframe should send:
+A parent may send this when it reveals, expands, or resizes an iframe:
 
 ```json
 {
@@ -225,9 +231,10 @@ A parent that reveals, expands, or resizes an iframe should send:
 }
 ```
 
-The iframe immediately refreshes every JSXGraph board, then repeats the refresh
-across animation frames. This is important when the iframe was initially laid
-out in a collapsed container. It does not produce a response message.
+The iframe accepts the message but does nothing: JSXGraph's resize observer
+(JSXGraph 1.14.2 or later) already sizes every board when the iframe is shown
+or resized. Hosts written for earlier versions of this protocol may keep
+sending it. It does not produce a response message.
 
 ## Host responsibilities
 
@@ -236,7 +243,6 @@ The parent integration should:
 - match responses by iframe window, `assessmentId`, and `requestId`;
 - enforce timeouts and payload or image size limits;
 - validate response schemas before grading or storage;
-- send `layout` whenever hidden content becomes visible;
 - request AI data only when needed; and
 - obtain appropriate consent and apply its own policy before response,
   summary, or image data leaves the browser.
