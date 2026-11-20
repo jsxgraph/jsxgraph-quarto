@@ -111,6 +111,10 @@ filters:
 | `reload`       | Shows a reload button.                                                         | `false`  |
 | `src_css`      | URL of `jsxgraph.css`; any other value selects the bundled copy (interactive output). | jsDelivr, JSXGraph 1.14.2 (exact) |
 | `src_jxg`      | URL of `jsxgraphcore.js`; any other value selects the bundled copy (interactive output). | jsDelivr, JSXGraph 1.14.2 (exact) |
+| `src_css_pre`  | CSS files loaded before `src_css`, separated by spaces (see [Additional JavaScript and CSS files](#additional-javascript-and-css-files)). | none |
+| `src_css_post` | CSS files loaded after `src_css` and after the extension's own frame CSS, separated by spaces. | none |
+| `src_jxg_pre`  | JavaScript files loaded before `src_jxg`, separated by spaces.                 | none |
+| `src_jxg_post` | JavaScript files loaded after `src_jxg` and before the board code, separated by spaces (JSXGraph extensions, an `options.js`). | none |
 | `src_mjx`      | Path to the MathJax file.                                                      | jsDelivr, latest MathJax 4.x |
 | `src_mjx_preload` | URL or local path of a script that runs before the MathJax script (interactive output only; see [Configuring MathJax before it loads](#configuring-mathjax-before-it-loads)). | none |
 | `style`        | Custom CSS (e.g. `border: 5px solid red; border-radius: 10px;`).               | `none`   |
@@ -215,6 +219,31 @@ preserved as supplied. Any other value (a local path, say) selects the bundled
 copy of `jsxgraphcore.js` and `jsxgraph.css`, which is embedded as a data URL;
 the path itself is not read. The bundled resources therefore remain available
 for self-contained or offline projects when selected explicitly.
+
+## Additional JavaScript and CSS files
+
+`src_jxg_pre`, `src_jxg_post`, `src_css_pre` and `src_css_post` load further
+files in the head of each board's `<iframe>`, and in the page that renders the
+static SVG export. Use `src_jxg_post` for JSXGraph extensions or a file that
+sets `JXG.Options`, and `src_css_post` for your own style rules:
+
+```yaml
+jsxgraph:
+  src_jxg_post: "js/options.js https://example.org/jsxgraph-extension.js"
+  src_css_post: css/boards.css
+```
+
+Each option takes one or more entries separated by spaces; they are loaded in
+the given order. An entry is an `http(s)` or `data:` URL, used as given, or a
+local file, which is looked up like `src_mjx_preload` (the folder of the
+document, then the project folder) and embedded as a data URL; a file that
+cannot be read stops the render. Paths cannot contain spaces, and a file that
+is embedded cannot load further files by relative URL.
+
+The order in the frame is: `src_mjx_preload`, MathJax, `src_jxg_pre`,
+`src_jxg`, `src_jxg_post`, `src_css_pre`, `src_css`, the extension's own frame
+CSS, `src_css_post`, then the board code. A code block attribute replaces the
+document option; an empty one (`src_jxg_post=""`) switches it off.
 
 ## Configuring MathJax before it loads
 

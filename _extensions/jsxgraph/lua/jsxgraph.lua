@@ -191,7 +191,11 @@ end
 
 -- The src of the pre-loader script: http(s) and data URLs as given, a local
 -- file embedded as a data URL. Returns nil if the option is unset or empty.
-local function resolvePreloadSrc(value)
+-- Also used for the entries of src_jxg_pre/_post and src_css_pre/_post
+-- (opt: option name for messages, mime: MIME type of an embedded file).
+local function resolvePreloadSrc(value, opt, mime)
+    opt = opt or "src_mjx_preload"
+    mime = mime or "text/javascript"
     if type(value) ~= "string" then return nil end
     value = trim(value)
     if value == "" then return nil end
@@ -200,7 +204,7 @@ local function resolvePreloadSrc(value)
     if scheme then
         scheme = scheme:lower()
         if scheme == "http" or scheme == "https" or scheme == "data" then return value end
-        failRender("JSXGraph: option src_mjx_preload must be an http(s) or data URL or a local file path, not '" .. value .. "'")
+        failRender("JSXGraph: option " .. opt .. " must be an http(s) or data URL or a local file path, not '" .. value .. "'")
     end
 
     local candidates = {}
@@ -213,15 +217,54 @@ local function resolvePreloadSrc(value)
     end
 
     for _, file in ipairs(candidates) do
-        if PRELOAD_CACHE[file] then return PRELOAD_CACHE[file] end
+        local key = mime .. "|" .. file
+        if PRELOAD_CACHE[key] then return PRELOAD_CACHE[key] end
         local content = readBinary(file)
         if content then
-            PRELOAD_CACHE[file] = 'data:text/javascript;base64,' .. quarto.base64.encode(content)
-            return PRELOAD_CACHE[file]
+            PRELOAD_CACHE[key] = 'data:' .. mime .. ';base64,' .. quarto.base64.encode(content)
+            return PRELOAD_CACHE[key]
         end
     end
-    failRender("JSXGraph: option src_mjx_preload: cannot read the local file '" .. value ..
+    failRender("JSXGraph: option " .. opt .. ": cannot read the local file '" .. value ..
           "' (looked for: " .. table.concat(candidates, ", ") .. ")")
+end
+
+-- Additional files around the JSXGraph script and CSS (options src_jxg_pre,
+-- src_jxg_post, src_css_pre, src_css_post): entries separated by whitespace,
+-- loaded in the given order, each resolved like src_mjx_preload.
+local SRC_EXTRA = {
+    { opt = "src_jxg_pre", mime = "text/javascript" },
+    { opt = "src_jxg_post", mime = "text/javascript" },
+    { opt = "src_css_pre", mime = "text/css" },
+    { opt = "src_css_post", mime = "text/css" }
+}
+
+-- Returns the HTML tags per option (for the iframe) and the same lists as
+-- JavaScript declarations (for the SVG export).
+local function resolveSrcExtra(options)
+    local tags, js = {}, {}
+    for _, extra in ipairs(SRC_EXTRA) do
+        local html, list = {}, {}
+        local value = options[extra.opt]
+        if type(value) ~= "string" then value = "" end
+        for entry in value:gmatch("%S+") do
+            local src = resolvePreloadSrc(entry, extra.opt, extra.mime)
+            if extra.mime == "text/css" then
+                html[#html + 1] = '<link rel="stylesheet" href="' .. escapeHtmlAttribute(src) .. '">\n'
+            else
+                html[#html + 1] = '<script src="' .. escapeHtmlAttribute(src) .. '"></script>\n'
+            end
+            list[#list + 1] = '"' .. src:gsub('\\', '\\\\'):gsub('"', '\\"') .. '"'
+        end
+        tags[extra.opt] = table.concat(html)
+        js[#js + 1] = 'let ' .. extra.opt .. ' = [' .. table.concat(list, ', ') .. '];\n'
+    end
+    js[#js + 1] = [[
+function cssLinks(list) {
+    return list.map((href) => '<link rel="stylesheet" href="' + href.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '">').join('\n');
+}
+]]
+    return tags, table.concat(js)
 end
 
 -- Render JSXGraph
@@ -260,6 +303,7 @@ local function renderJsxgraph(globalOptions)
         local out = 'svg'
         if quarto.doc.is_format("html") then out = options.out end
         if isNonemptyString(options.echo) then options.echo = options.echo=="true" end
+        local src_extra, src_extra_js = resolveSrcExtra(options)
 
         if out == 'svg' then
             local temp_dir = getTempDir()
@@ -340,7 +384,7 @@ let svgFilename = "%s";
 let reload = "%s";
 let format = "%s";
 
-            ]], options.width, options.height, options.style, options.src_jxg, options.dom, options.src_mjx, options.src_css, options.uuid, options.unit, options.textwidth, file_svg_path, options.reload, FORMAT) .. string.format([[
+            ]], options.width, options.height, options.style, options.src_jxg, options.dom, options.src_mjx, options.src_css, options.uuid, options.unit, options.textwidth, file_svg_path, options.reload, FORMAT) .. src_extra_js .. string.format([[
 
 function getUnit(value) {
     const match = value.toString().match(/[a-z%%]+$/i);
@@ -388,6 +432,7 @@ if (unit === "%%") {
     <!-- Include JSXGraph -->
     <!--<script src="${src_jxg}"></script>-->
     <!-- Include CSS -->
+    ${cssLinks(src_css_pre)}
     <style>
         @import url("${src_css}");
     </style>
@@ -395,6 +440,7 @@ if (unit === "%%") {
       html, body { margin: 0; padding: 0; width: 100%%; height: 100%%; }
       .jxgbox { border: none; }
     </style>
+    ${cssLinks(src_css_post)}
   </head>
   <body>
     <div id="${uuid}" class="jxgbox" style="width: ${width}${unit}; height: ${height}${unit}; display: block; object-fit: fill; box-sizing: border-box; ${style};"></div>
@@ -402,11 +448,13 @@ if (unit === "%%") {
 </html>
 `);
 
+    for (const src of src_jxg_pre) await page.addScriptTag({url: src});
     if (fs.existsSync(src_jxg)) {
         await page.addScriptTag({ path: path.resolve(src_jxg) });
     } else if (src_jxg.startsWith('http://') || src_jxg.startsWith('https://') || src_jxg.startsWith('file://')) {
         await page.addScriptTag({url: src_jxg});
     }
+    for (const src of src_jxg_post) await page.addScriptTag({url: src});
 
     // BOARDID names the board's container everywhere in the code.
     await page.evaluate((uuid) => { window.BOARDID = uuid; }, uuid);
@@ -826,17 +874,17 @@ board%s.reload = function() { window.location.reload(); };
 <head>
 <meta charset="UTF-8">
 %s<script id="MathJax-script" async src="%s"></script>
-<script src="%s"></script>
-<style>@import url("%s");</style>
+%s<script src="%s"></script>
+%s<style>@import url("%s");</style>
 <style>html,body{margin:0;padding:0;width:100%%;height:100%%;overflow:hidden;}.jxgbox{border:none;border-radius:0px;}</style>
-</head>
+%s</head>
 <body>
 <div id="%s" class="jxgbox" style="width:100%%;height:100%%;display:block;object-fit:fill;box-sizing:border-box;"></div>
 <script>%s</script>
 <script>%s</script>
 <script>%s</script>
 </body>
-</html>]], preload_tag, options.src_mjx, options.src_jxg, options.src_css, id, assessment_bridge, GRAPH_EDITOR_JS, jsxgraph)
+</html>]], preload_tag, options.src_mjx, src_extra.src_jxg_pre, options.src_jxg, src_extra.src_jxg_post .. src_extra.src_css_pre, options.src_css, src_extra.src_css_post, id, assessment_bridge, GRAPH_EDITOR_JS, jsxgraph)
 
             local jsx_b64 = 'data:text/html;base64,' .. quarto.base64.encode(icontent)
             local iframe = '<iframe src="'..jsx_b64..'" class="'..options.class..'" name="iframe'..id..'"'
