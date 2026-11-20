@@ -109,8 +109,8 @@ filters:
 | `iframe_id`    | Adds `id="frame_id"` to the `<iframe>` containing the JSXGraph illustration.   | —        |
 | `out`          | Static export with `svg`; interactive html export with `js`.                   | `js`     |
 | `reload`       | Shows a reload button.                                                         | `false`  |
-| `src_css`      | URL of `jsxgraph.css`; any other value selects the bundled copy (interactive output). | jsDelivr, JSXGraph 1.14.2 (exact) |
-| `src_jxg`      | URL of `jsxgraphcore.js`; any other value selects the bundled copy (interactive output). | jsDelivr, JSXGraph 1.14.2 (exact) |
+| `src_css`      | URL of `jsxgraph.css`; any other value selects the bundled copy (interactive output). | jsDelivr, JSXGraph 1.14.3 (exact) |
+| `src_jxg`      | URL of `jsxgraphcore.js`; any other value selects the bundled copy (interactive output). | jsDelivr, JSXGraph 1.14.3 (exact) |
 | `src_css_pre`  | CSS files loaded before `src_css`, separated by spaces (see [Additional JavaScript and CSS files](#additional-javascript-and-css-files)). | none |
 | `src_css_post` | CSS files loaded after `src_css` and after the extension's own frame CSS, separated by spaces. | none |
 | `src_jxg_pre`  | JavaScript files loaded before `src_jxg`, separated by spaces.                 | none |
@@ -213,7 +213,7 @@ options, and host integration contract are documented in
 ## Asset loading
 
 Interactive output uses the jsDelivr JSXGraph JavaScript and CSS URLs by
-default, pinned exactly to the released JSXGraph 1.14.2 (`jsxgraph@1.14.2`). A
+default, pinned exactly to the released JSXGraph 1.14.3 (`jsxgraph@1.14.3`). A
 project can set `src_jxg` and `src_css` to other HTTP(S) URLs, which are
 preserved as supplied. Any other value (a local path, say) selects the bundled
 copy of `jsxgraphcore.js` and `jsxgraph.css`, which is embedded as a data URL;
